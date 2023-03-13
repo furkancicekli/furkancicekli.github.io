@@ -1,3 +1,0 @@
-# furkancicekli.github.io
-
-deneme
