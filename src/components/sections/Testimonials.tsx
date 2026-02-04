@@ -21,7 +21,7 @@ export function Testimonials() {
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
             {t('testimonials.title')}
           </h2>
-          <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
+          <p className="text-lg text-base-content/90 max-w-2xl mx-auto">
             {t('testimonials.subtitle')}
           </p>
         </motion.div>
@@ -34,7 +34,7 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="card bg-base-200"
+              className="card bg-base-200 border border-base-300"
             >
               <div className="card-body">
                 <Quote className="w-8 h-8 text-primary/30 mb-4" />
@@ -47,14 +47,14 @@ export function Testimonials() {
                         className={`w-4 h-4 ${
                           i < testimonial.rating!
                             ? 'text-warning fill-current'
-                            : 'text-base-content/20'
+                            : 'text-base-content/40'
                         }`}
                       />
                     ))}
                   </div>
                 )}
 
-                <p className="text-base-content/70 mb-4 flex-grow">
+                <p className="text-base-content/90 mb-4 flex-grow">
                   "{testimonial.text[lang] || testimonial.text.tr}"
                 </p>
 

@@ -27,7 +27,7 @@ export function About() {
   }, [nextImage])
 
   return (
-    <section id="about" className="section-padding bg-base-200">
+    <section id="about" className="section-padding bg-base-100 border-y border-base-300">
       <div className="container-custom">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <motion.div
@@ -68,7 +68,7 @@ export function About() {
                     className={`w-2 h-2 rounded-full transition-all ${
                       index === currentImage
                         ? 'bg-primary w-4'
-                        : 'bg-base-content/30'
+                        : 'bg-base-content/60'
                     }`}
                     aria-label={`Go to image ${index + 1}`}
                   />
@@ -93,8 +93,8 @@ export function About() {
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
               {t('about.title')}
             </h2>
-            <p className="text-lg text-base-content/70 mb-6">{t('about.subtitle')}</p>
-            <div className="space-y-4 text-base-content/70">
+            <p className="text-lg text-base-content/90 mb-6">{t('about.subtitle')}</p>
+            <div className="space-y-4 text-base-content/80">
               <p>{t('about.p1')}</p>
               <p>{t('about.p2')}</p>
               <p>{t('about.p3')}</p>

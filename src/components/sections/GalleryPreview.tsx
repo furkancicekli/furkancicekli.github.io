@@ -22,7 +22,7 @@ export function GalleryPreview() {
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
             {t('gallery.title')}
           </h2>
-          <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
+          <p className="text-lg text-base-content/90 max-w-2xl mx-auto">
             {t('gallery.subtitle')}
           </p>
         </motion.div>

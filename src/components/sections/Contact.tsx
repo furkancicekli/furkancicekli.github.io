@@ -30,7 +30,7 @@ export function Contact() {
   ]
 
   return (
-    <section id="contact" className="section-padding bg-base-200">
+    <section id="contact" className="section-padding bg-base-100 border-y border-base-300">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -42,7 +42,7 @@ export function Contact() {
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
             {t('contact.title')}
           </h2>
-          <p className="text-lg text-base-content/70 mb-12">
+          <p className="text-lg text-base-content/90 mb-12">
             {t('contact.subtitle')}
           </p>
 
@@ -61,7 +61,7 @@ export function Contact() {
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex flex-col items-center gap-3 p-6 rounded-xl bg-base-100 border border-base-300 hover:border-primary hover:shadow-lg transition-all duration-300"
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl bg-base-200 border border-base-300 hover:border-primary hover:shadow-lg transition-all duration-300"
                 >
                   <Icon className="w-6 h-6 text-primary" />
                   <span className="font-medium text-base-content">{t(`contact.${method.key}`)}</span>

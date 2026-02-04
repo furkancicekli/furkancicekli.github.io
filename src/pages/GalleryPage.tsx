@@ -32,7 +32,7 @@ export function GalleryPage() {
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-base-content mb-4">
               {t('gallery.title')}
             </h1>
-            <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
+            <p className="text-lg text-base-content/90 max-w-2xl mx-auto">
               {t('gallery.subtitle')}
             </p>
           </motion.div>
@@ -85,7 +85,7 @@ export function GalleryPage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <p className="text-base-content/60">
+              <p className="text-base-content/80">
                 {t('common.loading')}
               </p>
             </motion.div>
@@ -98,7 +98,7 @@ export function GalleryPage() {
             transition={{ delay: 0.5 }}
             className="mt-16 text-center"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-base-200 rounded-full text-sm text-base-content/60">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-base-200 border border-base-300 rounded-full text-sm text-base-content/80">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-4 w-4"
