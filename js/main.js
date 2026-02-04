@@ -1,18 +1,31 @@
 /**
  * Furkan Çiçekli Portfolio
- * Main JavaScript File
+ * Main JavaScript
  */
+
+// Fotoğraf sayıları - YENİ FOTOĞRAF EKLEDİĞİNİZDE BURAYA GÜNCELLE
+const CONFIG = {
+    aboutSlider: {
+        folder: 'images/about/',
+        count: 3,  // about klasöründeki fotoğraf sayısı (1.jpeg, 2.jpeg, 3.jpeg...)
+        extension: 'jpeg'
+    },
+    gallery: {
+        folder: 'images/gallery/',
+        count: 6,  // gallery klasöründeki fotoğraf sayısı
+        extension: 'jpeg'
+    }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
     initSmoothScroll();
-    initHeaderScroll();
-    initRevealAnimations();
-    initInstagramEmbed();
+    initAboutSlider();
+    initGallery();
 });
 
 /**
- * Mobile Menu Toggle
+ * Mobile Menu
  */
 function initMobileMenu() {
     const toggle = document.getElementById('mobileToggle');
@@ -20,11 +33,13 @@ function initMobileMenu() {
 
     if (!toggle || !navLinks) return;
 
-    toggle.addEventListener('click', () => {
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
         toggle.classList.toggle('active');
         navLinks.classList.toggle('active');
     });
 
+    // Link tıklandığında menüyü kapat
     navLinks.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
             toggle.classList.remove('active');
@@ -32,6 +47,7 @@ function initMobileMenu() {
         });
     });
 
+    // Dışarı tıklandığında menüyü kapat
     document.addEventListener('click', (e) => {
         if (!toggle.contains(e.target) && !navLinks.contains(e.target)) {
             toggle.classList.remove('active');
@@ -41,97 +57,90 @@ function initMobileMenu() {
 }
 
 /**
- * Smooth Scroll for Anchor Links
+ * Smooth Scroll
  */
 function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
-
             if (target) {
-                const headerOffset = 80;
-                const elementPosition = target.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
+                const offset = 70;
+                const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({ top, behavior: 'smooth' });
             }
         });
     });
 }
 
 /**
- * Header Scroll Effect
+ * About Section Slider
+ * images/about/ klasöründeki fotoğrafları yükler
  */
-function initHeaderScroll() {
-    const header = document.getElementById('header');
-    if (!header) return;
+function initAboutSlider() {
+    const container = document.getElementById('sliderContainer');
+    const prevBtn = document.getElementById('sliderPrev');
+    const nextBtn = document.getElementById('sliderNext');
 
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 50) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
-    });
-}
+    if (!container) return;
 
-/**
- * Reveal Animations on Scroll
- */
-function initRevealAnimations() {
-    const revealElements = document.querySelectorAll('.section, .service-card, .testimonial-card, .experience-item');
+    let currentSlide = 0;
+    const { folder, count, extension } = CONFIG.aboutSlider;
 
-    if (!revealElements.length) return;
-
-    revealElements.forEach(el => {
-        el.classList.add('reveal');
-    });
-
-    const revealOnScroll = () => {
-        revealElements.forEach(el => {
-            const elementTop = el.getBoundingClientRect().top;
-            const elementVisible = 150;
-
-            if (elementTop < window.innerHeight - elementVisible) {
-                el.classList.add('active');
-            }
-        });
-    };
-
-    revealOnScroll();
-
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            window.requestAnimationFrame(() => {
-                revealOnScroll();
-                ticking = false;
-            });
-            ticking = true;
-        }
-    });
-}
-
-/**
- * Instagram Embed Reload
- */
-function initInstagramEmbed() {
-    if (window.instgrm) {
-        window.instgrm.Embeds.process();
+    // Fotoğrafları yükle
+    for (let i = 1; i <= count; i++) {
+        const img = document.createElement('img');
+        img.src = `${folder}${i}.${extension}`;
+        img.alt = `Tesbih çalışması ${i}`;
+        img.loading = 'lazy';
+        container.appendChild(img);
     }
 
-    const observer = new MutationObserver(() => {
-        if (window.instgrm) {
-            window.instgrm.Embeds.process();
-        }
-    });
+    function updateSlider() {
+        container.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
 
-    const instagramContainer = document.querySelector('.instagram-embed');
-    if (instagramContainer) {
-        observer.observe(instagramContainer, { childList: true, subtree: true });
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            currentSlide = currentSlide > 0 ? currentSlide - 1 : count - 1;
+            updateSlider();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            currentSlide = currentSlide < count - 1 ? currentSlide + 1 : 0;
+            updateSlider();
+        });
+    }
+
+    // Otomatik geçiş (5 saniye)
+    setInterval(() => {
+        currentSlide = currentSlide < count - 1 ? currentSlide + 1 : 0;
+        updateSlider();
+    }, 5000);
+}
+
+/**
+ * Gallery Grid
+ * images/gallery/ klasöründeki fotoğrafları yükler
+ */
+function initGallery() {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+
+    const { folder, count, extension } = CONFIG.gallery;
+
+    for (let i = 1; i <= count; i++) {
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+
+        const img = document.createElement('img');
+        img.src = `${folder}${i}.${extension}`;
+        img.alt = `Tesbih ${i}`;
+        img.loading = 'lazy';
+
+        item.appendChild(img);
+        grid.appendChild(item);
     }
 }
