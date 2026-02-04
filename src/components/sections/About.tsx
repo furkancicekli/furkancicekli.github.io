@@ -93,8 +93,8 @@ export function About() {
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
               {t('about.title')}
             </h2>
-            <p className="text-lg text-base-content/90 mb-6">{t('about.subtitle')}</p>
-            <div className="space-y-4 text-base-content/80">
+            <p className="text-lg text-base-content mb-6">{t('about.subtitle')}</p>
+            <div className="space-y-4 text-base-content/90">
               <p>{t('about.p1')}</p>
               <p>{t('about.p2')}</p>
               <p>{t('about.p3')}</p>

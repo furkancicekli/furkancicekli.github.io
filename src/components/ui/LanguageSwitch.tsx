@@ -9,45 +9,21 @@ export function LanguageSwitch() {
   }
 
   return (
-    <div className="dropdown dropdown-end">
-      <label tabIndex={0} className="btn btn-ghost btn-sm gap-2">
-        <span>{languages[i18n.language as Language]?.flag || '🌐'}</span>
-        <span className="hidden sm:inline">
-          {languages[i18n.language as Language]?.name || 'Language'}
-        </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+    <div className="flex items-center bg-base-200 rounded-full p-1 gap-1">
+      {(Object.keys(languages) as Language[]).map((lang) => (
+        <button
+          key={lang}
+          onClick={() => handleLanguageChange(lang)}
+          className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 text-lg ${
+            i18n.language === lang
+              ? 'bg-primary shadow-md scale-110'
+              : 'hover:bg-base-300'
+          }`}
+          aria-label={languages[lang].name}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </label>
-      <ul
-        tabIndex={0}
-        className="dropdown-content z-[100] menu p-2 shadow-lg bg-base-100 rounded-box w-40"
-      >
-        {(Object.keys(languages) as Language[]).map((lang) => (
-          <li key={lang}>
-            <button
-              onClick={() => handleLanguageChange(lang)}
-              className={`${
-                i18n.language === lang ? 'active bg-primary/10 text-primary' : ''
-              }`}
-            >
-              <span>{languages[lang].flag}</span>
-              <span>{languages[lang].name}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+          <span>{languages[lang].flag}</span>
+        </button>
+      ))}
     </div>
   )
 }
