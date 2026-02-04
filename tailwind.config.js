@@ -18,7 +18,7 @@ export default {
     require('daisyui'),
   ],
   daisyui: {
-    themes: ["light", "dark"],
-    darkTheme: "dark",
+    themes: ["corporate", "business"],
+    darkTheme: "business",
   },
 }
