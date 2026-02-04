@@ -21,13 +21,13 @@ export default {
     themes: [
       {
         corporate: {
-          "primary": "#4f46e5",
+          "primary": "#1a1a1a",
           "primary-content": "#ffffff",
-          "secondary": "#7c3aed",
+          "secondary": "#2d2d2d",
           "secondary-content": "#ffffff",
-          "accent": "#f59e0b",
-          "accent-content": "#000000",
-          "neutral": "#1f2937",
+          "accent": "#404040",
+          "accent-content": "#ffffff",
+          "neutral": "#171717",
           "neutral-content": "#ffffff",
           "base-100": "#ffffff",
           "base-200": "#f9fafb",
