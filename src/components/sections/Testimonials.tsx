@@ -21,7 +21,7 @@ export function Testimonials() {
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
             {t('testimonials.title')}
           </h2>
-          <p className="text-lg text-base-content/90 max-w-2xl mx-auto">
+          <p className="text-lg text-base-content max-w-2xl mx-auto">
             {t('testimonials.subtitle')}
           </p>
         </motion.div>
@@ -54,18 +54,11 @@ export function Testimonials() {
                   </div>
                 )}
 
-                <p className="text-base-content/90 mb-4 flex-grow">
+                <p className="text-base-content mb-4 flex-grow">
                   "{testimonial.text[lang] || testimonial.text.tr}"
                 </p>
 
-                <div className="flex items-center gap-3">
-                  <div className="avatar placeholder">
-                    <div className="bg-primary text-primary-content rounded-full w-10">
-                      <span className="text-lg">
-                        {testimonial.name.charAt(0)}
-                      </span>
-                    </div>
-                  </div>
+                <div className="pt-2 border-t border-base-300">
                   <span className="font-semibold text-base-content">{testimonial.name}</span>
                 </div>
               </div>

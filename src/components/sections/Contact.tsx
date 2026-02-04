@@ -42,7 +42,7 @@ export function Contact() {
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
             {t('contact.title')}
           </h2>
-          <p className="text-lg text-base-content/90 mb-12">
+          <p className="text-lg text-base-content mb-12">
             {t('contact.subtitle')}
           </p>
 
