@@ -2,23 +2,30 @@ import { useEffect, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 
 export function ThemeSwitch() {
-  const [theme, setTheme] = useState<'corporate' | 'business'>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') as 'corporate' | 'business') || 'corporate'
-    }
-    return 'corporate'
-  })
+  const [theme, setTheme] = useState<'corporate' | 'business'>('corporate')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('theme', theme)
-  }, [theme])
+    const savedTheme = localStorage.getItem('theme') as 'corporate' | 'business'
+    const currentTheme = savedTheme || 'corporate'
+    setTheme(currentTheme)
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    setMounted(true)
+  }, [])
 
   const toggleTheme = () => {
     const newTheme = theme === 'corporate' ? 'business' : 'corporate'
     setTheme(newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
     localStorage.setItem('theme', newTheme)
+  }
+
+  if (!mounted) {
+    return (
+      <button className="btn btn-ghost btn-sm btn-square" aria-label="Toggle theme">
+        <Moon className="w-5 h-5" />
+      </button>
+    )
   }
 
   return (
