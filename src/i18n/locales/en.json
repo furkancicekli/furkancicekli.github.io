@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "Furkan Cicekli | Prayer Beads Artisan",
+    "description": "Master of handmade prayer beads. 6 years of experience with traditional and modern designs.",
+    "keywords": "prayer beads, handmade prayer beads, tesbih, amber prayer beads, artisan"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "gallery": "Gallery",
+    "contact": "Contact"
+  },
+  "hero": {
+    "greeting": "Hello, I'm",
+    "name": "Furkan Cicekli",
+    "title": "Prayer Beads Artisan",
+    "description": "Master of handmade prayer beads. I combine traditional craftsmanship with modern design.",
+    "cta": "View My Work",
+    "contact": "Get in Touch"
+  },
+  "stats": {
+    "experience": "Years Experience",
+    "projects": "Completed Projects",
+    "kuwait": "Years in Kuwait"
+  },
+  "about": {
+    "title": "About Me",
+    "subtitle": "Bringing traditional craft together with modern design",
+    "p1": "My passion for the art of prayer beads started at a young age. Over the years, I learned this craft from masters and developed my own unique style.",
+    "p2": "I work with amber, kuka, jet stone and many other precious materials. Each prayer bead comes to life with carefully selected materials and meticulous workmanship.",
+    "p3": "The years I spent in Kuwait allowed me to discover different cultures' understanding of prayer beads and enrich my technique."
+  },
+  "gallery": {
+    "title": "Gallery",
+    "subtitle": "My handcrafted works",
+    "viewAll": "View All",
+    "categories": {
+      "all": "All",
+      "amber": "Amber",
+      "kuka": "Kuka",
+      "oltu": "Jet Stone",
+      "other": "Other"
+    }
+  },
+  "testimonials": {
+    "title": "Testimonials",
+    "subtitle": "Feedback from my happy customers"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Reach out for custom prayer bead orders or questions",
+    "whatsapp": "WhatsApp",
+    "phone": "Phone",
+    "email": "Email",
+    "instagram": "Instagram"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "madeWith": "Made with"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "backToHome": "Back to Home"
+  }
+}

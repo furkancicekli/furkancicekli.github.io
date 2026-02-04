@@ -1,0 +1,5 @@
+export { Hero } from './Hero'
+export { About } from './About'
+export { GalleryPreview } from './GalleryPreview'
+export { Testimonials } from './Testimonials'
+export { Contact } from './Contact'
