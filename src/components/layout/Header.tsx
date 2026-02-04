@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Menu, X } from 'lucide-react'
 import { navItems, siteConfig } from '@/content/config'
 import { LanguageSwitch } from '@/components/ui/LanguageSwitch'
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch'
@@ -47,7 +48,6 @@ export function Header() {
     >
       <div className="container-custom">
         <nav className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
           <Link
             to="/"
             className="text-xl md:text-2xl font-serif font-bold text-base-content hover:text-primary transition-colors"
@@ -55,22 +55,20 @@ export function Header() {
             {siteConfig.name}
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.key}
                 to={item.href}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className="text-base-content/80 hover:text-primary transition-colors link-underline"
+                className="text-base-content/70 hover:text-base-content transition-colors"
               >
                 {t(`nav.${item.key}`)}
               </Link>
             ))}
           </div>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2">
             <LanguageSwitch />
             <ThemeSwitch />
             <a
@@ -83,40 +81,20 @@ export function Header() {
             </a>
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden btn btn-ghost btn-square"
             aria-label="Toggle menu"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              {isMobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </nav>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -131,7 +109,7 @@ export function Header() {
                   key={item.key}
                   to={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
-                  className="text-base-content/80 hover:text-primary transition-colors py-2"
+                  className="text-base-content/70 hover:text-base-content transition-colors py-2"
                 >
                   {t(`nav.${item.key}`)}
                 </Link>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const aboutImages = [
   '/images/about/1.jpeg',
@@ -26,10 +27,9 @@ export function About() {
   }, [nextImage])
 
   return (
-    <section id="about" className="section-padding bg-base-100">
+    <section id="about" className="section-padding bg-base-200">
       <div className="container-custom">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Image Slider */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -37,7 +37,7 @@ export function About() {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-xl">
+            <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-xl bg-base-300">
               {aboutImages.map((img, index) => (
                 <motion.img
                   key={img}
@@ -52,27 +52,13 @@ export function About() {
               ))}
             </div>
 
-            {/* Navigation */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
               <button
                 onClick={prevImage}
                 className="btn btn-circle btn-sm bg-base-100/80 backdrop-blur-sm hover:bg-base-100"
                 aria-label="Previous image"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <div className="flex gap-2">
                 {aboutImages.map((_, index) => (
@@ -93,25 +79,11 @@ export function About() {
                 className="btn btn-circle btn-sm bg-base-100/80 backdrop-blur-sm hover:bg-base-100"
                 aria-label="Next image"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
 
-          {/* Content */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -121,7 +93,7 @@ export function About() {
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-base-content mb-4">
               {t('about.title')}
             </h2>
-            <p className="text-xl text-primary mb-6">{t('about.subtitle')}</p>
+            <p className="text-lg text-base-content/70 mb-6">{t('about.subtitle')}</p>
             <div className="space-y-4 text-base-content/70">
               <p>{t('about.p1')}</p>
               <p>{t('about.p2')}</p>

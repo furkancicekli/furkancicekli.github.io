@@ -20,6 +20,7 @@
     "daisyui": "^5.5.17",
     "framer-motion": "^12.31.0",
     "i18next": "^25.8.3",
+    "lucide-react": "^0.563.0",
     "postcss": "^8.5.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
