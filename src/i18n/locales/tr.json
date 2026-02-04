@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "Furkan Çiçekli | Tesbih Ustası",
+    "description": "El yapımı tesbihlerin ustası. 6 yıllık tecrübe ile geleneksel ve modern tasarımlar.",
+    "keywords": "tesbih, el yapımı tesbih, tesbih ustası, kehribar tesbih, kuka tesbih"
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "about": "Hakkımda",
+    "gallery": "Galeri",
+    "contact": "İletişim"
+  },
+  "hero": {
+    "greeting": "Merhaba, Ben",
+    "name": "Furkan Çiçekli",
+    "title": "Tesbih Ustası",
+    "description": "El yapımı tesbihlerin ustası. Geleneksel zanaat ile modern tasarımı birleştiriyorum.",
+    "cta": "Çalışmalarımı Gör",
+    "contact": "İletişime Geç"
+  },
+  "stats": {
+    "experience": "Yıl Tecrübe",
+    "projects": "Tamamlanan Proje",
+    "kuwait": "Yıl Kuveyt"
+  },
+  "about": {
+    "title": "Hakkımda",
+    "subtitle": "Geleneksel zanaatı modern tasarımla buluşturuyorum",
+    "p1": "Tesbih sanatına olan tutkum küçük yaşlarda başladı. Yıllar içinde bu zanaatı ustalardan öğrenerek, kendime özgü bir tarz geliştirdim.",
+    "p2": "Kehribar, kuka, oltu taşı ve daha pek çok değerli malzeme ile çalışıyorum. Her tesbih, özenle seçilmiş malzemeler ve titiz işçilikle hayat buluyor.",
+    "p3": "Kuveyt'te geçirdiğim yıllar, farklı kültürlerin tesbih anlayışını tanımamı ve tekniğimi zenginleştirmemi sağladı."
+  },
+  "gallery": {
+    "title": "Galeri",
+    "subtitle": "El emeği, göz nuru çalışmalarım",
+    "viewAll": "Tümünü Gör",
+    "categories": {
+      "all": "Tümü",
+      "amber": "Kehribar",
+      "kuka": "Kuka",
+      "oltu": "Oltu Taşı",
+      "other": "Diğer"
+    }
+  },
+  "testimonials": {
+    "title": "Müşteri Yorumları",
+    "subtitle": "Mutlu müşterilerimden geri bildirimler"
+  },
+  "contact": {
+    "title": "İletişim",
+    "subtitle": "Özel tesbih siparişi vermek veya soru sormak için bana ulaşın",
+    "whatsapp": "WhatsApp",
+    "phone": "Telefon",
+    "email": "E-posta",
+    "instagram": "Instagram"
+  },
+  "footer": {
+    "rights": "Tüm hakları saklıdır.",
+    "madeWith": "ile yapıldı"
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Bir hata oluştu",
+    "backToHome": "Ana Sayfaya Dön"
+  }
+}
