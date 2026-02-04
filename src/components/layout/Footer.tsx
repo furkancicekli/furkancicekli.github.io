@@ -8,29 +8,36 @@ export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-base-200 py-12 md:py-16">
+    <footer className="bg-neutral text-neutral-content py-12 md:py-16">
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           <div>
             <Link
               to="/"
-              className="text-2xl font-serif font-bold text-base-content hover:text-primary transition-colors"
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              {siteConfig.name}
+              <img
+                src="/FURKANLOGO.png"
+                alt="Logo"
+                className="h-10 w-auto invert"
+              />
+              <span className="text-2xl font-serif font-bold text-neutral-content">
+                {siteConfig.name}
+              </span>
             </Link>
-            <p className="mt-4 text-base-content/70">
+            <p className="mt-4 text-neutral-content/80">
               {t('hero.description')}
             </p>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t('nav.home')}</h3>
+            <h3 className="text-lg font-semibold mb-4 text-neutral-content">{t('nav.home')}</h3>
             <ul className="space-y-2">
               {navItems.map((item) => (
                 <li key={item.key}>
                   <Link
                     to={item.href}
-                    className="text-base-content/70 hover:text-base-content transition-colors"
+                    className="text-neutral-content/80 hover:text-neutral-content transition-colors"
                   >
                     {t(`nav.${item.key}`)}
                   </Link>
@@ -40,12 +47,12 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t('contact.title')}</h3>
+            <h3 className="text-lg font-semibold mb-4 text-neutral-content">{t('contact.title')}</h3>
             <ul className="space-y-3">
               <li>
                 <a
                   href={`mailto:${siteConfig.email}`}
-                  className="text-base-content/70 hover:text-base-content transition-colors flex items-center gap-2"
+                  className="text-neutral-content/80 hover:text-neutral-content transition-colors flex items-center gap-2"
                 >
                   <Mail className="w-5 h-5" />
                   {siteConfig.email}
@@ -54,7 +61,7 @@ export function Footer() {
               <li>
                 <a
                   href={`tel:${siteConfig.phone}`}
-                  className="text-base-content/70 hover:text-base-content transition-colors flex items-center gap-2"
+                  className="text-neutral-content/80 hover:text-neutral-content transition-colors flex items-center gap-2"
                 >
                   <Phone className="w-5 h-5" />
                   {siteConfig.phone}
@@ -85,11 +92,11 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-base-300 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-base-content/60 text-sm">
+        <div className="mt-12 pt-8 border-t border-neutral-content/20 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-neutral-content/70 text-sm">
             &copy; {currentYear} {siteConfig.name}. {t('footer.rights')}
           </p>
-          <p className="text-base-content/60 text-sm flex items-center gap-1">
+          <p className="text-neutral-content/70 text-sm flex items-center gap-1">
             {t('footer.madeWith')} <Heart className="w-4 h-4 text-error fill-current" />
           </p>
         </div>

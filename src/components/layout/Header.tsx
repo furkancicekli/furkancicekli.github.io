@@ -42,17 +42,24 @@ export function Header() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-base-100/95 backdrop-blur-md shadow-sm'
-          : 'bg-transparent'
+          ? 'bg-base-100 backdrop-blur-md shadow-sm'
+          : 'bg-base-100/80 backdrop-blur-sm'
       }`}
     >
       <div className="container-custom">
         <nav className="flex items-center justify-between h-16 md:h-20">
           <Link
             to="/"
-            className="text-xl md:text-2xl font-serif font-bold text-base-content hover:text-primary transition-colors"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            {siteConfig.name}
+            <img
+              src="/FURKANLOGO.png"
+              alt="Logo"
+              className="h-10 md:h-12 w-auto"
+            />
+            <span className="text-xl md:text-2xl font-serif font-bold text-base-content">
+              {siteConfig.name}
+            </span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
@@ -61,7 +68,7 @@ export function Header() {
                 key={item.key}
                 to={item.href}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className="text-base-content/70 hover:text-base-content transition-colors"
+                className="text-base-content font-medium hover:text-primary transition-colors"
               >
                 {t(`nav.${item.key}`)}
               </Link>
@@ -109,7 +116,7 @@ export function Header() {
                   key={item.key}
                   to={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
-                  className="text-base-content/70 hover:text-base-content transition-colors py-2"
+                  className="text-base-content font-medium hover:text-primary transition-colors py-2"
                 >
                   {t(`nav.${item.key}`)}
                 </Link>

@@ -23,10 +23,10 @@ export function Hero() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-base-content mb-4">
               {t('hero.name')}
             </h1>
-            <h2 className="text-2xl md:text-3xl text-base-content/70 mb-6">
+            <h2 className="text-2xl md:text-3xl text-base-content/90 mb-6">
               {t('hero.title')}
             </h2>
-            <p className="text-lg text-base-content/60 mb-8 max-w-lg">
+            <p className="text-lg text-base-content/80 mb-8 max-w-lg">
               {t('hero.description')}
             </p>
 
@@ -43,7 +43,7 @@ export function Hero() {
                     {stat.value}
                     {stat.suffix || ''}
                   </div>
-                  <div className="text-sm text-base-content/60">
+                  <div className="text-sm text-base-content/80">
                     {t(`stats.${stat.key}`)}
                   </div>
                 </motion.div>
@@ -59,7 +59,7 @@ export function Hero() {
                 href={siteConfig.social.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-outline"
+                className="btn btn-outline btn-primary"
               >
                 {t('hero.contact')}
               </a>
