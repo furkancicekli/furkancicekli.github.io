@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { projects } from '@/content/projects'
 import { ProjectCard } from '@/components/ui/ProjectCard'
+import { Button } from '@/components/ui/button'
 
 export function GalleryPreview() {
   const { t } = useTranslation()
@@ -48,10 +49,12 @@ export function GalleryPreview() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="text-center mt-12"
         >
-          <Link to="/gallery" className="btn btn-primary">
-            {t('gallery.viewAll')}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Link>
+          <Button asChild>
+            <Link to="/gallery">
+              {t('gallery.viewAll')}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
         </motion.div>
       </div>
     </section>

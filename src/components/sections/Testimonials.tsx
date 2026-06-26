@@ -34,9 +34,9 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="card bg-base-200 border border-base-300"
+              className="rounded-xl bg-base-200 border border-base-300"
             >
-              <div className="card-body">
+              <div className="p-6">
                 <Quote className="w-8 h-8 text-primary/30 mb-4" />
 
                 {testimonial.rating && (
@@ -46,7 +46,7 @@ export function Testimonials() {
                         key={i}
                         className={`w-4 h-4 ${
                           i < testimonial.rating!
-                            ? 'text-warning fill-current'
+                            ? 'text-amber-400 fill-current'
                             : 'text-base-content/40'
                         }`}
                       />

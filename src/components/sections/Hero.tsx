@@ -1,11 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import { stats, siteConfig } from '@/content/config'
+import { LiquidMetal } from '@paper-design/shaders-react'
+import { siteConfig } from '@/content/config'
+import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/ui/Logo'
 
 export function Hero() {
   const { t } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
 
   return (
     <section className="min-h-screen flex items-center pt-20 bg-base-100">
@@ -17,9 +21,6 @@ export function Hero() {
             transition={{ duration: 0.6 }}
             className="order-2 lg:order-1"
           >
-            <p className="text-primary font-medium mb-4">
-              {t('hero.greeting')}
-            </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-base-content mb-4">
               {t('hero.name')}
             </h1>
@@ -30,39 +31,22 @@ export function Hero() {
               {t('hero.description')}
             </p>
 
-            <div className="flex flex-wrap gap-8 mb-8">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
-                  className="text-center"
-                >
-                  <div className="text-3xl md:text-4xl font-bold text-base-content">
-                    {stat.value}
-                    {stat.suffix || ''}
-                  </div>
-                  <div className="text-sm text-base-content/80">
-                    {t(`stats.${stat.key}`)}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
             <div className="flex flex-wrap gap-4">
-              <Link to="/gallery" className="btn btn-primary">
-                {t('hero.cta')}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-              <a
-                href={siteConfig.social.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost border-2 border-primary text-primary hover:bg-primary hover:text-white"
-              >
-                {t('hero.contact')}
-              </a>
+              <Button asChild>
+                <Link to="/gallery">
+                  {t('hero.cta')}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <a
+                  href={siteConfig.social.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('hero.contact')}
+                </a>
+              </Button>
             </div>
           </motion.div>
 
@@ -70,15 +54,35 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="order-1 lg:order-2"
+            className="order-1 lg:order-2 flex items-center justify-center"
           >
-            <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-xl bg-base-200">
-              <img
-                src="/images/hero/1.jpeg"
-                alt={t('hero.name')}
-                className="w-full h-full object-cover"
-                loading="eager"
-              />
+            {/* Brand-mark presentation: the logo silhouette rendered as a
+                liquid-metal shader (AI Canvas / paper.design). Under
+                reduced-motion we fall back to the static masked logo. */}
+            <div className="relative flex items-center justify-center w-full aspect-square max-w-md">
+              {prefersReducedMotion ? (
+                <Logo
+                  decorative
+                  className="h-72 w-[148px] text-foreground drop-shadow-sm"
+                />
+              ) : (
+                <LiquidMetal
+                  image="/FURKANLOGO.png"
+                  colorBack="#00000000"
+                  colorTint="#7b8794"
+                  repetition={5}
+                  softness={0.85}
+                  shiftRed={0.8}
+                  shiftBlue={-0.8}
+                  distortion={0.32}
+                  contour={0.45}
+                  speed={0.8}
+                  scale={0.62}
+                  fit="contain"
+                  width="100%"
+                  height="100%"
+                />
+              )}
             </div>
           </motion.div>
         </div>

@@ -1,6 +1,8 @@
 export { Hero } from './Hero'
+export { Stats } from './Stats'
 export { About } from './About'
 export { CraftSlider } from './CraftSlider'
+export { CraftStack } from './CraftStack'
 export { GalleryPreview } from './GalleryPreview'
 export { Testimonials } from './Testimonials'
 export { Contact } from './Contact'

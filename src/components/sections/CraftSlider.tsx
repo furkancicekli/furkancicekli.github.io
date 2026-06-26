@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { EffectCoverflow, Pagination, Navigation, Autoplay } from 'swiper/modules'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 import 'swiper/css'
 import 'swiper/css/effect-coverflow'
@@ -91,13 +93,13 @@ export function CraftSlider() {
 
           {/* Navigation Buttons */}
           <button
-            className="craft-slider-prev absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-10 btn btn-circle btn-primary shadow-lg"
+            className={cn(buttonVariants({ size: 'icon' }), 'craft-slider-prev absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg')}
             aria-label="Previous"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
           <button
-            className="craft-slider-next absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-10 btn btn-circle btn-primary shadow-lg"
+            className={cn(buttonVariants({ size: 'icon' }), 'craft-slider-next absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg')}
             aria-label="Next"
           >
             <ChevronRight className="w-6 h-6" />

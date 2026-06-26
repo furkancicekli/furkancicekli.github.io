@@ -12,6 +12,19 @@ dist
 dist-ssr
 *.local
 
+# Cloudflare generated types and cache
+worker-configuration.d.ts
+.wrangler/
+*.tsbuildinfo
+
+# Node compile cache (Node 22+ require/import cache)
+node-compile-cache/
+
+# Playwright test artifacts
+playwright-report/
+test-results/
+/playwright/.cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

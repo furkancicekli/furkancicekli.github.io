@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { siteConfig } from '@/content/config'
 
@@ -26,6 +26,12 @@ export function SEO({
   const seoUrl = url || siteConfig.url
   const seoImage = image.startsWith('http') ? image : `${siteConfig.url}${image}`
 
+  // React does not hoist <html> attributes; set lang/dir imperatively.
+  useEffect(() => {
+    document.documentElement.lang = i18n.language
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
+  }, [i18n.language])
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -36,23 +42,17 @@ export function SEO({
     jobTitle: t('hero.title'),
     description: seoDescription,
     image: seoImage,
-    sameAs: [
-      siteConfig.social.instagram,
-      siteConfig.social.whatsapp,
-    ].filter(Boolean),
+    sameAs: [siteConfig.social.instagram, siteConfig.social.whatsapp].filter(Boolean),
   }
 
   return (
-    <Helmet>
-      <html lang={i18n.language} dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} />
+    <>
       <title>{seoTitle}</title>
       <meta name="description" content={seoDescription} />
       <meta name="keywords" content={t('meta.keywords')} />
       <link rel="canonical" href={seoUrl} />
-
       {noindex && <meta name="robots" content="noindex,nofollow" />}
 
-      {/* Open Graph */}
       <meta property="og:type" content={type} />
       <meta property="og:title" content={seoTitle} />
       <meta property="og:description" content={seoDescription} />
@@ -61,16 +61,12 @@ export function SEO({
       <meta property="og:site_name" content={siteConfig.name} />
       <meta property="og:locale" content={i18n.language} />
 
-      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={seoTitle} />
       <meta name="twitter:description" content={seoDescription} />
       <meta name="twitter:image" content={seoImage} />
 
-      {/* Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
-      </script>
-    </Helmet>
+      <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+    </>
   )
 }

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { SEO } from '@/components/SEO'
 import { ProjectCard } from '@/components/ui/ProjectCard'
 import { projects, getProjectsByCategory } from '@/content/projects'
+import { buttonVariants } from '@/components/ui/button'
 
 const categories = ['all', 'amber', 'kuka', 'oltu', 'other'] as const
 
@@ -48,11 +49,10 @@ export function GalleryPage() {
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`btn btn-sm ${
-                  activeCategory === category
-                    ? 'btn-primary'
-                    : 'btn-ghost'
-                }`}
+                className={buttonVariants({
+                  variant: activeCategory === category ? 'default' : 'ghost',
+                  size: 'sm',
+                })}
               >
                 {t(`gallery.categories.${category}`)}
               </button>

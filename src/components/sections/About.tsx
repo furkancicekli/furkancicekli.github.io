@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 const aboutImages = [
   '/images/about/1.jpeg',
@@ -55,7 +57,7 @@ export function About() {
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
               <button
                 onClick={prevImage}
-                className="btn btn-circle btn-sm bg-base-100/80 backdrop-blur-sm hover:bg-base-100"
+                className={cn(buttonVariants({ size: 'sm' }), 'rounded-full bg-base-100/80 backdrop-blur-sm hover:bg-base-100')}
                 aria-label="Previous image"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -76,7 +78,7 @@ export function About() {
               </div>
               <button
                 onClick={nextImage}
-                className="btn btn-circle btn-sm bg-base-100/80 backdrop-blur-sm hover:bg-base-100"
+                className={cn(buttonVariants({ size: 'sm' }), 'rounded-full bg-base-100/80 backdrop-blur-sm hover:bg-base-100')}
                 aria-label="Next image"
               >
                 <ChevronRight className="w-4 h-4" />

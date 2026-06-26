@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Mail, Phone, Instagram, MessageCircle, Heart } from 'lucide-react'
 import { navItems, siteConfig } from '@/content/config'
+import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/ui/Logo'
 
 export function Footer() {
   const { t } = useTranslation()
@@ -16,11 +18,7 @@ export function Footer() {
               to="/"
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <img
-                src="/FURKANLOGO.png"
-                alt="Logo"
-                className="h-10 w-auto invert"
-              />
+              <Logo className="h-10 w-[21px] text-neutral-content" />
               <span className="text-2xl font-serif font-bold text-neutral-content">
                 {siteConfig.name}
               </span>
@@ -70,24 +68,26 @@ export function Footer() {
             </ul>
 
             <div className="flex items-center gap-2 mt-6">
-              <a
-                href={siteConfig.social.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost btn-sm btn-square"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href={siteConfig.social.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost btn-sm btn-square"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </a>
+              <Button asChild variant="ghost" size="icon">
+                <a
+                  href={siteConfig.social.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+              </Button>
+              <Button asChild variant="ghost" size="icon">
+                <a
+                  href={siteConfig.social.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+              </Button>
             </div>
           </div>
         </div>
@@ -97,7 +97,7 @@ export function Footer() {
             &copy; {currentYear} {siteConfig.name}. {t('footer.rights')}
           </p>
           <p className="text-neutral-content/70 text-sm flex items-center gap-1">
-            {t('footer.madeWith')} <Heart className="w-4 h-4 text-error fill-current" />
+            {t('footer.madeWith')} <Heart className="w-4 h-4 text-red-500 fill-current" />
           </p>
         </div>
       </div>
