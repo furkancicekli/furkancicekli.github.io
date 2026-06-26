@@ -20,9 +20,6 @@ export function Hero() {
             transition={{ duration: 0.6 }}
             className="order-2 lg:order-1"
           >
-            <p className="text-primary font-medium mb-4">
-              {t('hero.greeting')}
-            </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-base-content mb-4">
               {t('hero.name')}
             </h1>

@@ -6,7 +6,7 @@
   },
   "nav": {
     "home": "Home",
-    "about": "About",
+    "about": "Biography",
     "gallery": "Gallery",
     "contact": "Contact"
   },
@@ -26,7 +26,7 @@
     "kuwait": "Years in Kuwait"
   },
   "about": {
-    "title": "About Me",
+    "title": "Biography",
     "subtitle": "A craftsman who brings traditional artistry together with modern design",
     "p1": "Furkan Çiçekli's passion for the art of prayer beads began at an early age. Over the years he learned the craft from master artisans and developed a style of his own.",
     "p2": "He works with amber, kuka, jet stone and many other precious materials; each prayer bead comes to life through carefully selected materials and meticulous craftsmanship.",
@@ -38,7 +38,7 @@
   },
   "gallery": {
     "title": "Gallery",
-    "subtitle": "My handcrafted works",
+    "subtitle": "Handcrafted works",
     "viewAll": "View All",
     "categories": {
       "all": "All",
@@ -50,7 +50,7 @@
   },
   "testimonials": {
     "title": "Testimonials",
-    "subtitle": "Feedback from my happy customers"
+    "subtitle": "Feedback from happy customers"
   },
   "contact": {
     "title": "Contact",
@@ -72,7 +72,8 @@
   "craftStack": {
     "title": "Selected Craft",
     "subtitle": "A curated selection of handmade pieces, each crafted with precision and care",
-    "imageAlt": "Handmade craft piece {{index}} of {{total}}"
+    "imageAlt": "Handmade craft piece {{index}} of {{total}}",
+    "hint": "drag, click, or use the arrow keys"
   },
   "a11y": {
     "logo": "Furkan Çiçekli logo",

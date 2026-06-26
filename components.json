@@ -19,6 +19,7 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@fonttrio": "https://www.fonttrio.xyz/r/{name}.json"
+    "@fonttrio": "https://www.fonttrio.xyz/r/{name}.json",
+    "@aicanvas": "https://aicanvas.me/r/{name}.json"
   }
 }

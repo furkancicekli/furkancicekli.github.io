@@ -27,7 +27,7 @@
     "autoprefixer": "^10.4.24",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.31.0",
+    "framer-motion": "^12.42.0",
     "hono": "^4.12.27",
     "i18next": "^25.8.3",
     "lucide-react": "^0.563.0",

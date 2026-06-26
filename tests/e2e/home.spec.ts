@@ -151,26 +151,23 @@ test.describe('Home page smoke tests', () => {
   })
 
   // --------------------------------------------------------------------------
-  // 5. CraftStack section — Prev and Next controls are visible and clickable
+  // 5. Interactive card stack (AI Canvas) renders and is interactive
   // --------------------------------------------------------------------------
-  test('craftstack section has visible and clickable Prev and Next buttons', async ({ page }) => {
+  test('craft card stack renders and its controls are clickable', async ({ page }) => {
     await page.goto('/')
     await waitForLoaderGone(page)
 
-    // CraftStack uses t('a11y.prev') → "Önceki" and t('a11y.next') → "Sonraki"
-    const prevBtn = page.getByRole('button', { name: 'Önceki' })
-    const nextBtn = page.getByRole('button', { name: 'Sonraki' })
+    // The AI Canvas InteractiveCardStack exposes role="group" with this label.
+    const stack = page.getByRole('group', { name: 'Interactive card stack' })
+    await stack.scrollIntoViewIfNeeded()
+    await expect(stack).toBeVisible()
 
-    // Scroll into view
-    await nextBtn.scrollIntoViewIfNeeded()
+    // Dot indicators + back cards are buttons labelled "Show card N".
+    const controls = page.getByRole('button', { name: /Show card/i })
+    expect(await controls.count()).toBeGreaterThan(0)
 
-    await expect(prevBtn).toBeVisible()
-    await expect(nextBtn).toBeVisible()
-
-    // Both must be interactive — click should not throw
-    await nextBtn.click()
-    await page.waitForTimeout(300)
-    await prevBtn.click()
+    // A control must be interactive — click should not throw.
+    await controls.first().click()
   })
 
 })

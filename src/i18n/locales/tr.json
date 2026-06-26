@@ -6,7 +6,7 @@
   },
   "nav": {
     "home": "Ana Sayfa",
-    "about": "Hakkımda",
+    "about": "Biyografi",
     "gallery": "Galeri",
     "contact": "İletişim"
   },
@@ -26,7 +26,7 @@
     "kuwait": "Yıl Kuveyt"
   },
   "about": {
-    "title": "Hakkımda",
+    "title": "Biyografi",
     "subtitle": "Geleneksel zanaatı modern tasarımla buluşturan bir usta",
     "p1": "Furkan Çiçekli'nin tesbih sanatına olan tutkusu küçük yaşlarda başladı. Yıllar içinde bu zanaatı ustalardan öğrenerek kendine özgü bir tarz geliştirdi.",
     "p2": "Kehribar, kuka, oltu taşı ve daha pek çok değerli malzemeyle çalışıyor; her tesbih, özenle seçilmiş malzemeler ve titiz işçilikle hayat buluyor.",
@@ -38,7 +38,7 @@
   },
   "gallery": {
     "title": "Galeri",
-    "subtitle": "El emeği, göz nuru çalışmalarım",
+    "subtitle": "El emeği, göz nuru çalışmaları",
     "viewAll": "Tümünü Gör",
     "categories": {
       "all": "Tümü",
@@ -50,11 +50,11 @@
   },
   "testimonials": {
     "title": "Müşteri Yorumları",
-    "subtitle": "Mutlu müşterilerimden geri bildirimler"
+    "subtitle": "Mutlu müşterilerden geri bildirimler"
   },
   "contact": {
     "title": "İletişim",
-    "subtitle": "Özel tesbih siparişi vermek veya soru sormak için bana ulaşın",
+    "subtitle": "Özel tesbih siparişi vermek veya soru sormak için iletişime geçin",
     "whatsapp": "WhatsApp",
     "phone": "Telefon",
     "email": "E-posta",
@@ -72,7 +72,8 @@
   "craftStack": {
     "title": "El İşlerinden",
     "subtitle": "Özenle işlenmiş, her biri eşsiz el yapımı eserlerin seçkisi",
-    "imageAlt": "El işi eser {{index}} / {{total}}"
+    "imageAlt": "El işi eser {{index}} / {{total}}",
+    "hint": "sürükleyin, tıklayın veya ok tuşlarını kullanın"
   },
   "a11y": {
     "logo": "Furkan Çiçekli logosu",
