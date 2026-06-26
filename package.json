@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "deploy": "wrangler deploy",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "db:migrate:local": "wrangler d1 migrations apply furkancicekli --local",
     "db:migrate": "wrangler d1 migrations apply furkancicekli --remote",
     "seed:r2": "bash scripts/seed-r2.sh"
@@ -41,6 +42,7 @@
     "@cloudflare/vite-plugin": "^1.42.3",
     "@cloudflare/workers-types": "^4.20260625.1",
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.3",
