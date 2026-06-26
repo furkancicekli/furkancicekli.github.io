@@ -100,7 +100,7 @@ export function Footer() {
             &copy; {currentYear} {siteConfig.name}. {t('footer.rights')}
           </p>
           <p className="text-neutral-content/70 text-sm flex items-center gap-1">
-            {t('footer.madeWith')} <Heart className="w-4 h-4 text-error fill-current" />
+            {t('footer.madeWith')} <Heart className="w-4 h-4 text-red-500 fill-current" />
           </p>
         </div>
       </div>
