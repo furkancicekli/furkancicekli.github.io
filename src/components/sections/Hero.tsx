@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { stats, siteConfig } from '@/content/config'
+import { Button } from '@/components/ui/button'
 
 export function Hero() {
   const { t } = useTranslation()
@@ -51,18 +52,21 @@ export function Hero() {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <Link to="/gallery" className="btn btn-primary">
-                {t('hero.cta')}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-              <a
-                href={siteConfig.social.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost border-2 border-primary text-primary hover:bg-primary hover:text-white"
-              >
-                {t('hero.contact')}
-              </a>
+              <Button asChild>
+                <Link to="/gallery">
+                  {t('hero.cta')}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <a
+                  href={siteConfig.social.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('hero.contact')}
+                </a>
+              </Button>
             </div>
           </motion.div>
 

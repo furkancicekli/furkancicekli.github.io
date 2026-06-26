@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ZoomIn, X } from 'lucide-react'
 import type { Project } from '@/types'
 import type { Language } from '@/i18n'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface ProjectCardProps {
   project: Project
@@ -77,7 +79,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 btn btn-circle btn-sm bg-base-100/90 hover:bg-base-100"
+                className={cn(buttonVariants({ size: 'sm' }), 'absolute top-4 right-4 rounded-full bg-base-100/90 hover:bg-base-100')}
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />

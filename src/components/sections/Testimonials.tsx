@@ -36,7 +36,7 @@ export function Testimonials() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="card bg-base-200 border border-base-300"
             >
-              <div className="card-body">
+              <div className="p-6">
                 <Quote className="w-8 h-8 text-primary/30 mb-4" />
 
                 {testimonial.rating && (

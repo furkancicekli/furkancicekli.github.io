@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Mail, Phone, Instagram, MessageCircle, Heart } from 'lucide-react'
 import { navItems, siteConfig } from '@/content/config'
+import { Button } from '@/components/ui/button'
 
 export function Footer() {
   const { t } = useTranslation()
@@ -70,24 +71,26 @@ export function Footer() {
             </ul>
 
             <div className="flex items-center gap-2 mt-6">
-              <a
-                href={siteConfig.social.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost btn-sm btn-square"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href={siteConfig.social.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost btn-sm btn-square"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </a>
+              <Button asChild variant="ghost" size="icon">
+                <a
+                  href={siteConfig.social.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+              </Button>
+              <Button asChild variant="ghost" size="icon">
+                <a
+                  href={siteConfig.social.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+              </Button>
             </div>
           </div>
         </div>

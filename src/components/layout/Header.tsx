@@ -6,6 +6,7 @@ import { Menu, X } from 'lucide-react'
 import { navItems, siteConfig } from '@/content/config'
 import { LanguageSwitch } from '@/components/ui/LanguageSwitch'
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch'
+import { Button } from '@/components/ui/button'
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -78,19 +79,22 @@ export function Header() {
           <div className="hidden md:flex items-center gap-2">
             <LanguageSwitch />
             <ThemeSwitch />
-            <a
-              href={siteConfig.social.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary btn-sm"
-            >
-              {t('hero.contact')}
-            </a>
+            <Button asChild size="sm">
+              <a
+                href={siteConfig.social.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('hero.contact')}
+              </a>
+            </Button>
           </div>
 
-          <button
+          <Button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden btn btn-ghost btn-square"
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? (
@@ -98,7 +102,7 @@ export function Header() {
             ) : (
               <Menu className="w-6 h-6" />
             )}
-          </button>
+          </Button>
         </nav>
       </div>
 
@@ -125,14 +129,15 @@ export function Header() {
                 <LanguageSwitch />
                 <ThemeSwitch />
               </div>
-              <a
-                href={siteConfig.social.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary w-full"
-              >
-                {t('hero.contact')}
-              </a>
+              <Button asChild className="w-full">
+                <a
+                  href={siteConfig.social.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('hero.contact')}
+                </a>
+              </Button>
             </div>
           </motion.div>
         )}

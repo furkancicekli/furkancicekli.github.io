@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function ThemeSwitch() {
   const [theme, setTheme] = useState<'corporate' | 'business'>('corporate')
@@ -22,16 +23,17 @@ export function ThemeSwitch() {
 
   if (!mounted) {
     return (
-      <button className="btn btn-ghost btn-sm btn-square" aria-label="Toggle theme">
+      <Button variant="ghost" size="icon" aria-label="Toggle theme">
         <Moon className="w-5 h-5" />
-      </button>
+      </Button>
     )
   }
 
   return (
-    <button
+    <Button
       onClick={toggleTheme}
-      className="btn btn-ghost btn-sm btn-square"
+      variant="ghost"
+      size="icon"
       aria-label="Toggle theme"
     >
       {theme === 'business' ? (
@@ -39,6 +41,6 @@ export function ThemeSwitch() {
       ) : (
         <Moon className="w-5 h-5" />
       )}
-    </button>
+    </Button>
   )
 }
