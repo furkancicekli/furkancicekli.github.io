@@ -14,13 +14,21 @@ function App() {
   const startTime = useRef(Date.now())
 
   useEffect(() => {
+    // Remove the inline #app-loader after React's first commit so the React
+    // <LoadingScreen> (fixed inset-0 z-[100]) is guaranteed painted before the
+    // inline twin disappears, eliminating any one-frame content flash.
+    document.getElementById('app-loader')?.remove()
+  }, [])
+
+  useEffect(() => {
     let cancelled = false
+    let timerId: ReturnType<typeof setTimeout> | undefined
 
     function hide() {
       if (cancelled) return
       const elapsed = Date.now() - startTime.current
       const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed)
-      setTimeout(() => {
+      timerId = setTimeout(() => {
         if (!cancelled) setVisible(false)
       }, remaining)
     }
@@ -34,6 +42,7 @@ function App() {
 
     return () => {
       cancelled = true
+      clearTimeout(timerId)
       window.removeEventListener('load', hide)
     }
   }, [])
