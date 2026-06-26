@@ -69,7 +69,14 @@
     "error": "Bir hata oluştu",
     "backToHome": "Ana Sayfaya Dön"
   },
+  "craftStack": {
+    "title": "El İşlerinden",
+    "subtitle": "Özenle işlenmiş, her biri eşsiz el yapımı eserlerin seçkisi",
+    "imageAlt": "El işi eser {{index}} / {{total}}"
+  },
   "a11y": {
-    "logo": "Furkan Çiçekli logosu"
+    "logo": "Furkan Çiçekli logosu",
+    "prev": "Önceki",
+    "next": "Sonraki"
   }
 }

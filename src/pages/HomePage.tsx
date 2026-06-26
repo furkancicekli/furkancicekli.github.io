@@ -4,6 +4,7 @@ import {
   Stats,
   About,
   CraftSlider,
+  CraftStack,
   GalleryPreview,
   Testimonials,
   Contact,
@@ -17,6 +18,7 @@ export function HomePage() {
       <Stats />
       <About />
       <CraftSlider />
+      <CraftStack />
       <GalleryPreview />
       <Testimonials />
       <Contact />

@@ -69,7 +69,14 @@
     "error": "An error occurred",
     "backToHome": "Back to Home"
   },
+  "craftStack": {
+    "title": "Selected Craft",
+    "subtitle": "A curated selection of handmade pieces, each crafted with precision and care",
+    "imageAlt": "Handmade craft piece {{index}} of {{total}}"
+  },
   "a11y": {
-    "logo": "Furkan Çiçekli logo"
+    "logo": "Furkan Çiçekli logo",
+    "prev": "Previous",
+    "next": "Next"
   }
 }
