@@ -1,6 +1,7 @@
 import { SEO } from '@/components/SEO'
 import {
   Hero,
+  Stats,
   About,
   CraftSlider,
   GalleryPreview,
@@ -13,6 +14,7 @@ export function HomePage() {
     <>
       <SEO />
       <Hero />
+      <Stats />
       <About />
       <CraftSlider />
       <GalleryPreview />

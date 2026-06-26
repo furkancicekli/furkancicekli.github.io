@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import { stats, siteConfig } from '@/content/config'
+import { siteConfig } from '@/content/config'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/Logo'
 
@@ -32,26 +32,6 @@ export function Hero() {
             <p className="text-lg text-base-content/90 mb-8 max-w-lg">
               {t('hero.description')}
             </p>
-
-            <div className="flex flex-wrap gap-8 mb-8">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
-                  className="text-center"
-                >
-                  <div className="text-3xl md:text-4xl font-bold text-base-content">
-                    {stat.value}
-                    {stat.suffix || ''}
-                  </div>
-                  <div className="text-sm text-base-content/80">
-                    {t(`stats.${stat.key}`)}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
 
             <div className="flex flex-wrap gap-4">
               <Button asChild>

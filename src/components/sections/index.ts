@@ -1,4 +1,5 @@
 export { Hero } from './Hero'
+export { Stats } from './Stats'
 export { About } from './About'
 export { CraftSlider } from './CraftSlider'
 export { GalleryPreview } from './GalleryPreview'
