@@ -14,7 +14,7 @@
     "greeting": "Merhaba, Ben",
     "name": "Furkan Çiçekli",
     "title": "Tesbih Ustası",
-    "description": "El yapımı tesbihlerin ustası. Geleneksel zanaat ile modern tasarımı birleştiriyorum.",
+    "description": "El yapımı tesbihlerin ustası; geleneksel zanaatı modern tasarımla birleştiriyor.",
     "cta": "Çalışmalarımı Gör",
     "contact": "İletişime Geç"
   },
@@ -27,10 +27,10 @@
   },
   "about": {
     "title": "Hakkımda",
-    "subtitle": "Geleneksel zanaatı modern tasarımla buluşturuyorum",
-    "p1": "Tesbih sanatına olan tutkum küçük yaşlarda başladı. Yıllar içinde bu zanaatı ustalardan öğrenerek, kendime özgü bir tarz geliştirdim.",
-    "p2": "Kehribar, kuka, oltu taşı ve daha pek çok değerli malzeme ile çalışıyorum. Her tesbih, özenle seçilmiş malzemeler ve titiz işçilikle hayat buluyor.",
-    "p3": "Kuveyt'te geçirdiğim yıllar, farklı kültürlerin tesbih anlayışını tanımamı ve tekniğimi zenginleştirmemi sağladı."
+    "subtitle": "Geleneksel zanaatı modern tasarımla buluşturan bir usta",
+    "p1": "Furkan Çiçekli'nin tesbih sanatına olan tutkusu küçük yaşlarda başladı. Yıllar içinde bu zanaatı ustalardan öğrenerek kendine özgü bir tarz geliştirdi.",
+    "p2": "Kehribar, kuka, oltu taşı ve daha pek çok değerli malzemeyle çalışıyor; her tesbih, özenle seçilmiş malzemeler ve titiz işçilikle hayat buluyor.",
+    "p3": "Kuveyt'te geçirdiği yıllar, farklı kültürlerin tesbih anlayışını tanımasını ve tekniğini zenginleştirmesini sağladı."
   },
   "crafts": {
     "title": "El İşlerim",

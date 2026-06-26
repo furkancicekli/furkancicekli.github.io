@@ -5,7 +5,8 @@ import { test, expect } from '@playwright/test'
  *
  * IMPORTANT: Each test navigates fresh to '/' and waits for the loading
  * screen to clear before making assertions, because the app renders a
- * full-screen overlay (fixed inset-0 z-[100]) for ~700 ms on first load.
+ * full-screen overlay (fixed inset-0 z-[100]) that grows the logo and then
+ * dissolves to transparent (~2.2 s) on first load.
  *
  * Loader-wait strategy:
  *   page.waitForFunction waits until the overlay element (aria-hidden=true,
@@ -150,37 +151,7 @@ test.describe('Home page smoke tests', () => {
   })
 
   // --------------------------------------------------------------------------
-  // 5. Stats section renders — count values present
-  // --------------------------------------------------------------------------
-  test('stats section renders with correct count values', async ({ page }) => {
-    await page.goto('/')
-    await waitForLoaderGone(page)
-
-    // Scroll stats section into view so count-up animations fire (they are
-    // triggered by IntersectionObserver with useInView).
-    const statsSection = page.getByRole('region', { name: /Rakamlarla/i })
-    if (await statsSection.count() > 0) {
-      await statsSection.scrollIntoViewIfNeeded()
-    } else {
-      // Fallback: scroll to bottom to trigger IntersectionObserver
-      await page.evaluate(() => window.scrollBy(0, 600))
-    }
-
-    // Wait for count-up to complete (max 1.2 s animation + 0.5 s entry delay)
-    // The stat values are: 6, 100+ (with suffix), 2
-    await page.waitForTimeout(2_000)
-
-    // Assert stat text values are present somewhere on the page.
-    // They render as plain text inside span elements.
-    await expect(page.getByText('6', { exact: true }).first()).toBeVisible()
-    await expect(page.getByText('100').first()).toBeVisible()
-    // The "+" suffix is rendered inline: "100+"
-    await expect(page.getByText('+').first()).toBeVisible()
-    await expect(page.getByText('2', { exact: true }).first()).toBeVisible()
-  })
-
-  // --------------------------------------------------------------------------
-  // 6. CraftStack section — Prev and Next controls are visible and clickable
+  // 5. CraftStack section — Prev and Next controls are visible and clickable
   // --------------------------------------------------------------------------
   test('craftstack section has visible and clickable Prev and Next buttons', async ({ page }) => {
     await page.goto('/')

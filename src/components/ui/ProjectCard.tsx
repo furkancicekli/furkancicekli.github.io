@@ -61,13 +61,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-4xl max-h-[90vh] w-full"
+              className="relative max-w-[92vw] md:max-w-3xl"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={project.cover}
                 alt={project.title[lang] || project.title.tr}
-                className="w-full h-full object-contain rounded-lg"
+                className="block w-auto max-w-full max-h-[85vh] object-contain rounded-lg mx-auto"
               />
               <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent rounded-b-lg">
                 <h3 className="text-white font-semibold text-xl mb-2">
