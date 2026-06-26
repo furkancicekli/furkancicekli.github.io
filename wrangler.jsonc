@@ -17,5 +17,8 @@
       "database_id": "376f2859-a316-4ab2-aa14-05504ba5e99d",
       "migrations_dir": "./migrations"
     }
+  ],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "furkancicekli-media" }
   ]
 }

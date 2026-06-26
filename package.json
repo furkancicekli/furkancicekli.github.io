@@ -13,7 +13,8 @@
     "deploy": "gh-pages -d dist",
     "test": "vitest run",
     "db:migrate:local": "wrangler d1 migrations apply furkancicekli --local",
-    "db:migrate": "wrangler d1 migrations apply furkancicekli --remote"
+    "db:migrate": "wrangler d1 migrations apply furkancicekli --remote",
+    "seed:r2": "bash scripts/seed-r2.sh"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
