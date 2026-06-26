@@ -5,8 +5,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Playfair Display', 'Georgia', 'serif'],
+        // Arvo + Lato pairing (self-hosted via @fontsource, imported in globals.css).
+        sans: ['Lato', 'system-ui', 'sans-serif'],
+        serif: ['Arvo', 'Georgia', 'serif'],
+        mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
         arabic: ['Noto Sans Arabic', 'system-ui', 'sans-serif'],
       },
       colors: {
