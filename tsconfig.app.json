@@ -36,5 +36,6 @@
       "@utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src", "*.d.ts"]
+  "include": ["src", "*.d.ts"],
+  "exclude": ["src/worker"]
 }
