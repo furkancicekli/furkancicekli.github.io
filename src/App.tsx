@@ -7,7 +7,7 @@ import { LoadingScreen } from '@/components/ui'
 import '@/i18n'
 
 // Minimum time the loading screen must be visible (ms).
-const MIN_DISPLAY_MS = 700
+const MIN_DISPLAY_MS = 1800
 
 function App() {
   const [visible, setVisible] = useState(true)
