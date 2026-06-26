@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import { LiquidMetal } from '@paper-design/shaders-react'
 import { siteConfig } from '@/content/config'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/Logo'
@@ -55,48 +56,33 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="order-1 lg:order-2 flex items-center justify-center"
           >
-            {/* Brand-mark presentation: logo over mono radial-gradient backdrop */}
-            <div className="relative flex items-center justify-center w-full aspect-[4/5] max-w-sm">
-              {/* Outer glow ring */}
-              <div
-                className="absolute inset-0 rounded-3xl"
-                style={{
-                  background:
-                    'radial-gradient(ellipse 70% 60% at 50% 50%, hsl(var(--muted)) 0%, transparent 70%)',
-                }}
-              />
-              {/* Inner accent ring — very subtle concentric */}
-              <div
-                className="absolute inset-[15%] rounded-2xl"
-                style={{
-                  background:
-                    'radial-gradient(ellipse 60% 50% at 50% 50%, hsl(var(--accent)) 0%, transparent 65%)',
-                  opacity: 0.6,
-                }}
-              />
-              {/* Animated shimmer ring (skipped when reduced-motion) */}
-              {!prefersReducedMotion && (
-                <motion.div
-                  className="absolute inset-[20%] rounded-2xl"
-                  style={{
-                    background:
-                      'radial-gradient(ellipse 50% 40% at 50% 50%, hsl(var(--foreground) / 0.06) 0%, transparent 70%)',
-                  }}
-                  animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.97, 1.03, 0.97] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
-              {/* Floating logo */}
-              <motion.div
-                animate={prefersReducedMotion ? {} : { y: [0, -10, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative z-10 flex items-center justify-center"
-              >
+            {/* Brand-mark presentation: the logo silhouette rendered as a
+                liquid-metal shader (AI Canvas / paper.design). Under
+                reduced-motion we fall back to the static masked logo. */}
+            <div className="relative flex items-center justify-center w-full aspect-square max-w-md">
+              {prefersReducedMotion ? (
                 <Logo
                   decorative
                   className="h-72 w-[148px] text-foreground drop-shadow-sm"
                 />
-              </motion.div>
+              ) : (
+                <LiquidMetal
+                  image="/FURKANLOGO.png"
+                  colorBack="#00000000"
+                  colorTint="#7b8794"
+                  repetition={5}
+                  softness={0.85}
+                  shiftRed={0.8}
+                  shiftBlue={-0.8}
+                  distortion={0.32}
+                  contour={0.45}
+                  speed={0.8}
+                  scale={0.62}
+                  fit="contain"
+                  width="100%"
+                  height="100%"
+                />
+              )}
             </div>
           </motion.div>
         </div>

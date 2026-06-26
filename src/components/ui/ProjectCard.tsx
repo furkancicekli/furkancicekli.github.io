@@ -79,7 +79,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className={cn(buttonVariants({ size: 'sm' }), 'absolute top-4 right-4 rounded-full bg-base-100/90 hover:bg-base-100')}
+                className={cn(buttonVariants({ size: 'icon' }), 'absolute top-4 right-4 rounded-full bg-base-100/90 text-foreground hover:bg-base-100 hover:text-foreground shadow-md')}
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
