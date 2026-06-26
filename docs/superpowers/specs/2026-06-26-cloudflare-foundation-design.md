@@ -30,6 +30,8 @@ Statik GitHub Pages sitesi, Cloudflare üzerinde tam yığın bir uygulamaya dö
 - **Paket yöneticisi:** npm (pnpm dosyaları silinir).
 - **Cloudflare:** hesap mevcut, furkancicekli.com Cloudflare DNS'de.
 - **Deploy:** GitHub Actions, `main` branch'e push'ta otomatik `wrangler deploy`.
+- **Logo:** Mevcut `public/FURKANLOGO.png` korunur — yeni tasarımda da bu logo kullanılır, değiştirilmez/kaybedilmez.
+- **Tipografi:** 3-4 alternatif denenecek. Kullanıcı "Greed" (ücretli) fontunu seviyor; ücretsiz benzer alternatifler aranacak (bkz. §7).
 
 ---
 
@@ -121,14 +123,39 @@ Statik GitHub Pages sitesi, Cloudflare üzerinde tam yığın bir uygulamaya dö
 - **Tipler:** `Env`/`Bindings` tek yerde tanımlı; `wrangler types` ile üretilen tipler kullanılır.
 - **Migration'lar additive ve sıralı** (`migrations/NNNN_*.sql`).
 
-## 4. Kapsam Dışı (Faz 1 DEĞİL)
+## 4. UI / Animasyon Bileşen Referansları (öncelikli Faz 4)
+
+Kullanıcının seçtiği referanslar. Hepsi shadcn/Tailwind/framer-motion tabanlı registry'ler; kuracağımız shadcn altyapısıyla uyumlu. Faz 4'te ihtiyaçlı yerlerde uyarlanır. **Her biri entegrasyondan önce lisans + React 19/Tailwind v3 uyumu açısından doğrulanır.**
+
+| Bileşen | Kaynak | Kullanım yeri |
+|---|---|---|
+| Interactive Card Stack | aicanvas.me/components/interactive-card-stack | Seçili tesbih görselleri için kart-yığını section'ı |
+| Minimal animasyon seti | animate-ui.com/docs | Genel mikro-animasyonlar (giriş, hover, geçişler) |
+| Dancing Letters (text) | chamaac.com/.../dancing-letters | Bir başlık/section'da hareketli harf efekti |
+| Interactive Grid (background) | chamaac.com/.../interactive-grid | Opsiyonel arka plan efekti |
+| Stats Cards | chamaac.com/.../stats-cards | Mevcut istatistikler (6 yıl tecrübe, 100+ proje, 2 yıl Kuveyt) için uyarlanır |
+| Hero (heatmap **veya** liquid-metal) | cult-ui.com/.../hero-heatmap, hero-liquid-metal | Hero'da animasyondaki şeklin yerine **kullanıcının logosu** konur; efektler logoya uygulanır. İkisinden uygun olan seçilir |
+| Hover Video Player | cult-ui.com/.../hover-video-player | Video varsa kullanılır; yoksa alternatif düşünülür |
+
+**Notlar:**
+- Hero efektinde logo (FURKANLOGO.png) merkezde; heatmap/liquid-metal efekti logoyla bütünleşmeli. Teknik olarak logoya shader/efekt uygulamak zor olabilir → Faz 4'te bir prototiple doğrulanır, mümkün değilse efekt arka planda + logo net önde gösterilir.
+- Bu kütüphaneler "kopyala-yapıştır" yaklaşımıyla projeye alınır (NPM bağımlılığı zorunlu değil); kod proje içine kopyalanıp shadcn token'larıyla stillenir.
+
+## 5. Tipografi (Faz 4'te netleşir, Faz 1'de altyapı hazır)
+
+- Kullanıcı **"Greed"** (ücretli, geniş/display karakterli) tarzını seviyor.
+- Denenecek **ücretsiz** alternatif adayları (ticari kullanıma uygun): Fontshare'den **Clash Display**, **Boska**, **Bespoke Serif**; Google Fonts'tan **Bricolage Grotesque**, **Familjen Grotesk**. Display/başlık için 1, gövde için 1 seçilecek.
+- 3-4 alternatif denenip kullanıcıyla karara bağlanır. Font değişimi tasarım sisteminde tek değişkenden (CSS variable / Tailwind `fontFamily`) yönetilecek şekilde kurulur.
+- Mevcut Inter/Playfair, yeni font kararına kadar varsayılan kalır.
+
+## 6. Kapsam Dışı (Faz 1 DEĞİL)
 - Admin auth/login akışı ve panel UI (Faz 2).
 - Ürün/içerik CRUD ve public site'ın D1/R2'dan okuması (Faz 3).
 - Public UI tam görsel revizyonu ve yeni sayfalar (Faz 4).
 - Sertifika/QR/PDF üretimi (Faz 5).
 - Domain cutover (ayrı, kullanıcı onaylı adım).
 
-## 5. Riskler / Açık Noktalar
+## 7. Riskler / Açık Noktalar
 - Cloudflare Vite plugin build çıktı dizini (`dist/client`) uygulamada doğrulanmalı; `wrangler.jsonc` `assets.directory` ona göre ayarlanır.
 - MDX rollup plugin'i ile Cloudflare Vite plugin birlikte çalışması doğrulanmalı.
 - React 19 native metadata'nın ld+json `<script>` ve `<html lang/dir>` davranışı doğrulanmalı (gerekirse `lang/dir` `<html>` üzerinde i18n efektiyle ayarlanır, metadata değil).
