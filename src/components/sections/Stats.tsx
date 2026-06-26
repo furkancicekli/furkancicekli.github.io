@@ -5,6 +5,7 @@ import { stats } from '@/content/config'
 
 function useCountUp(target: number, duration: number, enabled: boolean) {
   const [count, setCount] = useState(enabled ? 0 : target)
+  const rafRef = useRef<number>(0)
 
   useEffect(() => {
     if (!enabled) {
@@ -23,12 +24,12 @@ function useCountUp(target: number, duration: number, enabled: boolean) {
       setCount(Math.round(eased * target))
 
       if (progress < 1) {
-        requestAnimationFrame(tick)
+        rafRef.current = requestAnimationFrame(tick)
       }
     }
 
-    const raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
   }, [target, duration, enabled])
 
   return count
