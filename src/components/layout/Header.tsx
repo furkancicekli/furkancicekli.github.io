@@ -7,6 +7,7 @@ import { navItems, siteConfig } from '@/content/config'
 import { LanguageSwitch } from '@/components/ui/LanguageSwitch'
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/ui/Logo'
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -53,11 +54,7 @@ export function Header() {
             to="/"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <img
-              src="/FURKANLOGO.png"
-              alt="Logo"
-              className="h-10 md:h-12 w-auto"
-            />
+            <Logo className="h-10 w-[21px] md:h-12 md:w-[25px] text-foreground" />
             <span className="text-xl md:text-2xl font-serif font-bold text-base-content">
               {siteConfig.name}
             </span>

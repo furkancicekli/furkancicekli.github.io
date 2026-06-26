@@ -66,5 +66,8 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "backToHome": "Back to Home"
+  },
+  "a11y": {
+    "logo": "Furkan Çiçekli logo"
   }
 }

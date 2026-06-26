@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Mail, Phone, Instagram, MessageCircle, Heart } from 'lucide-react'
 import { navItems, siteConfig } from '@/content/config'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/ui/Logo'
 
 export function Footer() {
   const { t } = useTranslation()
@@ -17,11 +18,7 @@ export function Footer() {
               to="/"
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <img
-                src="/FURKANLOGO.png"
-                alt="Logo"
-                className="h-10 w-auto invert"
-              />
+              <Logo className="h-10 w-[21px] text-neutral-content" />
               <span className="text-2xl font-serif font-bold text-neutral-content">
                 {siteConfig.name}
               </span>
