@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { motion, useReducedMotion, type PanInfo } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DancingLetters } from '@/components/ui/DancingLetters'
 
 const CRAFT_IMAGES = [
   { id: 1, src: '/images/gallery/craft-1.jpg' },
@@ -89,7 +90,7 @@ export function CraftStack() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            {t('craftStack.title')}
+            <DancingLetters text={t('craftStack.title')} />
           </h2>
           <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
             {t('craftStack.subtitle')}
