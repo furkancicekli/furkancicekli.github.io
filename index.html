@@ -67,6 +67,38 @@
     </script>
   </head>
   <body>
+    <!-- Pre-React inline loader: shows the brand logo before JS hydrates.
+         Matches the React LoadingScreen exactly (same bg + logo colors, same
+         positioning) so the visual transition is seamless.
+         Removed by main.tsx after React mounts. -->
+    <style>
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: #ffffff;
+        display: grid;
+        place-items: center;
+      }
+      html.dark #app-loader {
+        background: #0a0a0a;
+      }
+      #app-loader-logo {
+        width: 49px;
+        height: 96px;
+        -webkit-mask: url(/FURKANLOGO.png) center / contain no-repeat;
+        mask: url(/FURKANLOGO.png) center / contain no-repeat;
+        background-color: currentColor;
+        color: #0a0a0a;
+      }
+      html.dark #app-loader-logo {
+        color: #fafafa;
+      }
+    </style>
+    <div id="app-loader">
+      <div id="app-loader-logo"></div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
