@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply furkancicekli --local",
+    "db:migrate": "wrangler d1 migrations apply furkancicekli --remote"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",

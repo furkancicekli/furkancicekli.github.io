@@ -2,9 +2,8 @@ import { Hono } from 'hono'
 
 export type Bindings = {
   ASSETS: Fetcher
-  // DB and MEDIA are added in later tasks:
-  // DB: D1Database
-  // MEDIA: R2Bucket
+  DB: D1Database
+  // MEDIA: R2Bucket (added in Task 7)
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
