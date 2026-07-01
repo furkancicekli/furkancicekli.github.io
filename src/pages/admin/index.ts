@@ -1,3 +1,6 @@
 export { AdminLoginPage } from './AdminLoginPage'
 export { AdminLayout } from './AdminLayout'
 export { AdminDashboardPage } from './AdminDashboardPage'
+export { AdminSettingsPage } from './AdminSettingsPage'
+export { AdminComingSoonPage } from './AdminComingSoonPage'
+export { contentSections } from './sections'

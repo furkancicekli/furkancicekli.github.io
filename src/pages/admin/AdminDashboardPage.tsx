@@ -1,95 +1,72 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
-import { changePassword } from './api'
+import { Link } from 'react-router-dom'
+import { ArrowRight, ExternalLink } from 'lucide-react'
+import { contentSections, settingsSection } from './sections'
 
-const PASSWORD_ERRORS: Record<string, string> = {
-  invalid_credentials: 'Mevcut şifre hatalı.',
-  password_too_short: 'Yeni şifre en az 8 karakter olmalı.',
-  network: 'Bağlantı hatası. Tekrar deneyin.',
-  unknown: 'Bir hata oluştu. Tekrar deneyin.',
-}
-
-const UPCOMING = [
-  { title: 'Ürünler', note: 'Faz 3 — ürün, foto/video, hammadde yönetimi' },
-  { title: 'Süreç & Hikaye', note: 'Faz 3 — yapım süreci adımları' },
-  { title: 'SSS', note: 'Faz 3 — soru/cevap yönetimi' },
-  { title: 'Sertifikalar', note: 'Faz 5 — sertifika + QR üretimi' },
-]
-
+/**
+ * Genel Bakış: içerik bölümlerine tıklanabilir kartlar. Henüz açılmamış
+ * bölümler "Yakında" rozetiyle işaretlidir ama rotaları gerçektir.
+ */
 export function AdminDashboardPage() {
-  const [current, setCurrent] = useState('')
-  const [next, setNext] = useState('')
-  const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  async function handlePasswordChange(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setMessage(null)
-    const result = await changePassword(current, next)
-    setBusy(false)
-    if (result.ok) {
-      setMessage({ kind: 'ok', text: 'Şifre güncellendi.' })
-      setCurrent('')
-      setNext('')
-    } else {
-      setMessage({ kind: 'error', text: PASSWORD_ERRORS[result.error] ?? PASSWORD_ERRORS.unknown })
-    }
-  }
-
   return (
-    <div className="space-y-8">
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Genel Bakış</h2>
+    <div className="space-y-10">
+      <header>
+        <h1 className="font-serif text-2xl font-bold">Genel Bakış</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Sitenin içeriğini buradan yöneteceksin. İçerik bölümleri bir sonraki güncellemeyle açılacak.
+        </p>
+      </header>
+
+      <section aria-label="İçerik bölümleri">
         <div className="grid gap-4 sm:grid-cols-2">
-          {UPCOMING.map((item) => (
-            <div key={item.title} className="rounded-lg border border-dashed border-border p-4">
-              <h3 className="font-medium">{item.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{item.note}</p>
-            </div>
+          {contentSections.map((s) => (
+            <Link
+              key={s.path}
+              to={s.path}
+              className="group rounded-lg border border-border bg-card p-5 outline-none transition-colors hover:border-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div className="flex items-start justify-between">
+                <s.icon aria-hidden="true" className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                {s.ready ? (
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                  />
+                ) : (
+                  <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Yakında
+                  </span>
+                )}
+              </div>
+              <h2 className="mt-4 font-serif text-lg font-bold">{s.label}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{s.description}</p>
+            </Link>
           ))}
         </div>
       </section>
 
-      <section className="max-w-sm">
-        <h2 className="mb-4 text-lg font-semibold">Şifre Değiştir</h2>
-        <form onSubmit={handlePasswordChange} className="space-y-3 rounded-lg border border-border bg-card p-4">
-          <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Mevcut şifre</span>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Yeni şifre (en az 8 karakter)</span>
-            <input
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              value={next}
-              onChange={(e) => setNext(e.target.value)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            />
-          </label>
-          {message && (
-            <p role={message.kind === 'ok' ? 'status' : 'alert'} className={`text-sm ${message.kind === 'ok' ? 'text-green-600' : 'text-destructive'}`}>
-              {message.text}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-          >
-            {busy ? 'Kaydediliyor…' : 'Güncelle'}
-          </button>
-        </form>
+      <section aria-label="Kısayollar" className="grid gap-4 sm:grid-cols-2">
+        <Link
+          to={settingsSection.path}
+          className="group flex items-center justify-between rounded-lg border border-border p-4 outline-none transition-colors hover:border-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div>
+            <h2 className="text-sm font-medium">Ayarlar</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">Şifreni buradan değiştirebilirsin.</p>
+          </div>
+          <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+        </Link>
+        <a
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          className="group flex items-center justify-between rounded-lg border border-border p-4 outline-none transition-colors hover:border-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div>
+            <h2 className="text-sm font-medium">Siteyi görüntüle</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">Yayındaki site yeni sekmede açılır.</p>
+          </div>
+          <ExternalLink aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+        </a>
       </section>
     </div>
   )

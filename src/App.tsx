@@ -3,7 +3,14 @@ import { AnimatePresence } from 'framer-motion'
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { Layout } from '@/components/layout'
 import { HomePage, GalleryPage } from '@/pages'
-import { AdminLoginPage, AdminLayout, AdminDashboardPage } from '@/pages/admin'
+import {
+  AdminLoginPage,
+  AdminLayout,
+  AdminDashboardPage,
+  AdminSettingsPage,
+  AdminComingSoonPage,
+  contentSections,
+} from '@/pages/admin'
 import { LoadingScreen } from '@/components/ui'
 import '@/i18n'
 
@@ -45,6 +52,15 @@ function App() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
+            {/* Faz 3/5'te açılacak içerik bölümleri — şimdilik "yakında" sayfaları */}
+            {contentSections.map((s) => (
+              <Route
+                key={s.path}
+                path={s.path.replace('/admin/', '')}
+                element={<AdminComingSoonPage section={s} />}
+              />
+            ))}
           </Route>
         </Routes>
       </BrowserRouter>
