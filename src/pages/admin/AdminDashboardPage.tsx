@@ -78,7 +78,7 @@ export function AdminDashboardPage() {
             />
           </label>
           {message && (
-            <p role="alert" className={`text-sm ${message.kind === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+            <p role={message.kind === 'ok' ? 'status' : 'alert'} className={`text-sm ${message.kind === 'ok' ? 'text-green-600' : 'text-destructive'}`}>
               {message.text}
             </p>
           )}

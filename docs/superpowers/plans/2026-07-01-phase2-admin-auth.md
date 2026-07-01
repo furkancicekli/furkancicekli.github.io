@@ -991,7 +991,7 @@ export function AdminLoginPage() {
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </label>
-        {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <button
           type="submit"
           disabled={busy}
@@ -1185,7 +1185,7 @@ export function AdminDashboardPage() {
             />
           </label>
           {message && (
-            <p role="alert" className={`text-sm ${message.kind === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+            <p role={message.kind === 'ok' ? 'status' : 'alert'} className={`text-sm ${message.kind === 'ok' ? 'text-green-600' : 'text-destructive'}`}>
               {message.text}
             </p>
           )}
