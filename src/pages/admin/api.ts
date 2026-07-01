@@ -376,3 +376,58 @@ export async function deleteFaq(id: number): Promise<{ ok: true } | { ok: false;
     return { ok: false, error: 'network' }
   }
 }
+
+export interface Certificate {
+  id: number
+  productId: number
+  serialNo: string
+  qrToken: string
+  buyerName: string | null
+  issuedAt: number
+  productName?: string | null
+  productSlug?: string | null
+}
+
+export async function listCertificates(): Promise<
+  { ok: true; data: Certificate[] } | { ok: false; error: string }
+> {
+  try {
+    const res = await fetch('/api/admin/certificates', { credentials: 'same-origin' })
+    if (res.ok) {
+      const data = (await res.json()) as { certificates: Certificate[] }
+      return { ok: true, data: data.certificates }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function createCertificate(
+  productId: number,
+  buyerName?: string,
+): Promise<{ ok: true; data: Certificate } | { ok: false; error: string }> {
+  try {
+    const res = await post('/api/admin/certificates', { productId, buyerName })
+    if (res.ok) {
+      const data = (await res.json()) as Certificate
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function deleteCertificate(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await del(`/api/admin/certificates/${id}`)
+    if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}

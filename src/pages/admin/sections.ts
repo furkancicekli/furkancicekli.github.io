@@ -49,7 +49,7 @@ export const contentSections: AdminSection[] = [
     label: 'Sertifikalar',
     description: 'Satılan ürünler için sertifika ve QR kodu üretimi.',
     icon: BadgeCheck,
-    ready: false,
+    ready: true,
   },
 ]
 

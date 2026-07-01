@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { Layout } from '@/components/layout'
-import { HomePage, GalleryPage } from '@/pages'
+import { HomePage, GalleryPage, VerifyPage } from '@/pages'
 import {
   AdminLoginPage,
   AdminLayout,
@@ -13,6 +13,7 @@ import {
   AdminProductEditPage,
   AdminProcessPage,
   AdminFaqPage,
+  AdminCertificatesPage,
   contentSections,
 } from '@/pages/admin'
 import { LoadingScreen } from '@/components/ui'
@@ -54,6 +55,7 @@ function App() {
             <Route path="/gallery" element={<GalleryPage />} />
           </Route>
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/verify/:token" element={<VerifyPage />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
@@ -62,6 +64,7 @@ function App() {
             <Route path="products/:id" element={<AdminProductEditPage />} />
             <Route path="process" element={<AdminProcessPage />} />
             <Route path="faq" element={<AdminFaqPage />} />
+            <Route path="certificates" element={<AdminCertificatesPage />} />
             {/* Henüz açılmamış içerik bölümleri — "yakında" sayfaları. Bir bölüm
                 açıldığında sections.ts'te ready:true yapılır ve buradan düşer. */}
             {contentSections
