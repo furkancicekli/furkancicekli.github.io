@@ -309,4 +309,8 @@ Commit: `test(admin): e2e flows for product, certificate+verify, faq`
 
 ## Deploy Sonrası Notlar (kod dışı)
 - R2 bucket üretimde zaten var (`furkancicekli-media`); medya yükleme deploy sonrası çalışır.
-- Sonraki iterasyonlar: public sitenin ürünleri D1/R2'dan okuması (ürün detay sayfaları), süreç adımlarına görsel bağlama, sertifika PDF/çok dillilik.
+- Sonraki iterasyonlar: public sitenin ürünleri D1/R2'dan okuması (ürün detay sayfaları), süreç adımlarına görsel bağlama, sertifika PDF/çok dillilik, galeri medya sıralama UI'ı (patchMedia hazır).
+
+## Kayıtlı Tasarım Kararları (final review)
+- `/api/verify/:token` alıcı adını (buyerName) token'ı bilen herkese gösterir — bilinçli karar: token, sertifikanın üstüne basılan yetki-URL'sidir (capability URL); sertifika sahibi kimin adına kesildiğini görmelidir. Alıcı adı girmek opsiyoneldir.
+- `/api/media/*` taslak (draft) ürün medyasını da servis eder — anahtarlar sunucu-üretimi UUID olduğundan tahmin edilemez; public sitede taslak ürünler listelenmediği sürece pratik sızıntı yoktur.
