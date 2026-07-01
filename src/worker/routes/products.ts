@@ -7,6 +7,7 @@ export type ProductsEnv = {
 }
 
 export const productsRoutes = new Hono<ProductsEnv>()
+export const productStepsRoutes = new Hono<ProductsEnv>()
 
 const SLUG_RE = /^[a-z0-9-]{1,64}$/
 const STATUSES: ProductStatus[] = ['draft', 'published', 'sold']
@@ -80,6 +81,35 @@ function validateInput(body: Record<string, unknown>): ValidatedInput {
       translations,
     },
   }
+}
+
+type ValidatedStepInput = { ok: true; texts: Partial<Record<Lang, string>>; sort?: number } | { ok: false; error: string }
+
+function validateStepInput(body: Record<string, unknown>, opts: { requireSort: boolean } = { requireSort: false }): ValidatedStepInput {
+  const rawTexts = body.texts
+  if (typeof rawTexts !== 'object' || rawTexts === null) return { ok: false, error: 'invalid_request' }
+  const src = rawTexts as Record<string, unknown>
+
+  const trText = trimOrNull(src.tr)
+  if (!trText) return { ok: false, error: 'invalid_request' }
+
+  const texts: Partial<Record<Lang, string>> = { tr: trText }
+  for (const lang of LANGS) {
+    if (lang === 'tr') continue
+    if (src[lang] === undefined) continue
+    const value = trimOrNull(src[lang])
+    if (value) texts[lang] = value
+  }
+
+  if (body.sort === undefined) {
+    if (opts.requireSort) return { ok: false, error: 'invalid_request' }
+    return { ok: true, texts, sort: undefined }
+  }
+  if (typeof body.sort !== 'number' || !Number.isInteger(body.sort) || body.sort < 0) {
+    return { ok: false, error: 'invalid_request' }
+  }
+
+  return { ok: true, texts, sort: body.sort }
 }
 
 productsRoutes.get('/', async (c) => {
@@ -173,6 +203,64 @@ productsRoutes.delete('/:id', async (c) => {
   }
 
   const deleted = await store.delete(id)
+  if (!deleted) return c.json({ error: 'not_found' }, 404)
+  return c.json({ ok: true })
+})
+
+productsRoutes.post('/:id/steps', async (c) => {
+  const idParam = c.req.param('id')
+  const id = Number(idParam)
+  if (!Number.isInteger(id)) return c.json({ error: 'invalid_request' }, 400)
+
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'invalid_request' }, 400)
+  }
+  if (typeof body !== 'object' || body === null) return c.json({ error: 'invalid_request' }, 400)
+
+  const validated = validateStepInput(body as Record<string, unknown>)
+  if (!validated.ok) return c.json({ error: validated.error }, 400)
+
+  const store = c.get('productStore')
+  const product = await store.get(id)
+  if (!product) return c.json({ error: 'not_found' }, 404)
+
+  const sort = validated.sort ?? product.steps.length
+  const step = await store.addStep(id, validated.texts, sort)
+  return c.json(step, 201)
+})
+
+productStepsRoutes.put('/:stepId', async (c) => {
+  const stepIdParam = c.req.param('stepId')
+  const stepId = Number(stepIdParam)
+  if (!Number.isInteger(stepId)) return c.json({ error: 'invalid_request' }, 400)
+
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'invalid_request' }, 400)
+  }
+  if (typeof body !== 'object' || body === null) return c.json({ error: 'invalid_request' }, 400)
+
+  const validated = validateStepInput(body as Record<string, unknown>, { requireSort: true })
+  if (!validated.ok) return c.json({ error: validated.error }, 400)
+
+  const store = c.get('productStore')
+  const step = await store.updateStep(stepId, validated.texts, validated.sort as number)
+  if (!step) return c.json({ error: 'not_found' }, 404)
+  return c.json(step)
+})
+
+productStepsRoutes.delete('/:stepId', async (c) => {
+  const stepIdParam = c.req.param('stepId')
+  const stepId = Number(stepIdParam)
+  if (!Number.isInteger(stepId)) return c.json({ error: 'invalid_request' }, 400)
+
+  const store = c.get('productStore')
+  const deleted = await store.deleteStep(stepId)
   if (!deleted) return c.json({ error: 'not_found' }, 404)
   return c.json({ ok: true })
 })
