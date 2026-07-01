@@ -35,7 +35,7 @@ export const contentSections: AdminSection[] = [
     label: 'Süreç & Hikaye',
     description: 'Yapım süreci adımları ve atölye hikayesi.',
     icon: Hammer,
-    ready: false,
+    ready: true,
   },
   {
     path: '/admin/faq',

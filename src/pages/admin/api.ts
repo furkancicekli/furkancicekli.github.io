@@ -198,3 +198,109 @@ export async function deleteProduct(id: number): Promise<{ ok: true } | { ok: fa
     return { ok: false, error: 'network' }
   }
 }
+
+export async function uploadProductMedia(
+  productId: number,
+  file: File,
+  kind: ProductMediaItem['kind'],
+): Promise<{ ok: true; data: ProductMediaItem } | { ok: false; error: string }> {
+  try {
+    const form = new FormData()
+    form.set('file', file)
+    form.set('kind', kind)
+    // content-type ayarlanmaz — tarayıcı multipart boundary'yi kendi ekler
+    const res = await fetch(`/api/admin/products/${productId}/media`, {
+      method: 'POST',
+      body: form,
+      credentials: 'same-origin',
+    })
+    if (res.ok) {
+      const data = (await res.json()) as ProductMediaItem
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function patchMedia(
+  mediaId: number,
+  patch: { kind?: ProductMediaItem['kind']; sort?: number },
+): Promise<{ ok: true; data: ProductMediaItem } | { ok: false; error: string }> {
+  try {
+    const res = await fetch(`/api/admin/media/${mediaId}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(patch),
+      credentials: 'same-origin',
+    })
+    if (res.ok) {
+      const data = (await res.json()) as ProductMediaItem
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function deleteMedia(mediaId: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await del(`/api/admin/media/${mediaId}`)
+    if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function addStep(
+  productId: number,
+  texts: Partial<Record<Lang, string>>,
+  sort?: number,
+): Promise<{ ok: true; data: ProcessStep } | { ok: false; error: string }> {
+  try {
+    const res = await post(`/api/admin/products/${productId}/steps`, sort === undefined ? { texts } : { texts, sort })
+    if (res.ok) {
+      const data = (await res.json()) as ProcessStep
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function updateStep(
+  stepId: number,
+  texts: Partial<Record<Lang, string>>,
+  sort: number,
+): Promise<{ ok: true; data: ProcessStep } | { ok: false; error: string }> {
+  try {
+    const res = await put(`/api/admin/steps/${stepId}`, { texts, sort })
+    if (res.ok) {
+      const data = (await res.json()) as ProcessStep
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function deleteStep(stepId: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await del(`/api/admin/steps/${stepId}`)
+    if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
