@@ -42,35 +42,21 @@ app.use('/api/auth/*', async (c, next) => {
   c.set('store', d1AuthStore(c.env.DB))
   await next()
 })
+app.route('/api/auth', authRoutes)
+// Single combined store middleware for all /api/admin/* routes: constructing
+// these store closures is negligible cost (no queries run until a handler
+// actually uses them), so setting all of them here avoids the fragility of
+// per-prefix middlewares silently missing a store for a newly added route.
 app.use('/api/admin/*', async (c, next) => {
   c.set('store', d1AuthStore(c.env.DB))
-  await next()
-})
-app.route('/api/auth', authRoutes)
-app.use('/api/admin/*', requireAuth)
-app.use('/api/admin/products/*', async (c, next) => {
   c.set('productStore', d1ProductStore(c.env.DB))
-  await next()
-})
-app.use('/api/admin/media/*', async (c, next) => {
-  c.set('productStore', d1ProductStore(c.env.DB))
-  await next()
-})
-app.use('/api/admin/steps/*', async (c, next) => {
-  c.set('productStore', d1ProductStore(c.env.DB))
-  await next()
-})
-app.use('/api/admin/faqs/*', async (c, next) => {
   c.set('faqStore', d1FaqStore(c.env.DB))
+  c.set('certStore', d1CertStore(c.env.DB))
   await next()
 })
+app.use('/api/admin/*', requireAuth)
 app.use('/api/faqs/*', async (c, next) => {
   c.set('faqStore', d1FaqStore(c.env.DB))
-  await next()
-})
-app.use('/api/admin/certificates/*', async (c, next) => {
-  c.set('certStore', d1CertStore(c.env.DB))
-  c.set('productStore', d1ProductStore(c.env.DB))
   await next()
 })
 app.use('/api/verify/*', async (c, next) => {
