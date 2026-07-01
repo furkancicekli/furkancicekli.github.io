@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { Hono } from 'hono'
-import { productsRoutes, productStepsRoutes, type ProductsEnv } from './products'
+import { productsRoutes, type ProductsEnv } from './products'
 import { requireAuth } from '../middleware/require-auth'
 import type { AuthEnv } from './auth'
-import type { ProductDetail, ProcessStep } from '../db/products'
+import type { ProductDetail } from '../db/products'
+import { isValidSerial } from '../lib/serial'
 import { fakeAuthStore } from '../test/fake-auth-store'
 import { fakeProductStore } from '../test/fake-product-store'
+import { fakeCertStore } from '../test/fake-cert-store'
 import { fakeR2Bucket } from '../test/fake-r2-bucket'
 
 async function json<T = unknown>(res: Response): Promise<T> {
@@ -16,15 +18,14 @@ type CombinedEnv = { Bindings: AuthEnv['Bindings']; Variables: AuthEnv['Variable
 
 function validInput(overrides: Record<string, unknown> = {}) {
   return {
-    slug: 'ring-01',
-    status: 'draft',
-    translations: { tr: { name: 'Yüzük', description: null, story: null } },
+    translations: { tr: { name: 'Kuka Tesbih', description: null, story: null } },
     ...overrides,
   }
 }
 
 describe('products routes', () => {
   let productStore: ReturnType<typeof fakeProductStore>
+  let certStore: ReturnType<typeof fakeCertStore>
   let authStore: ReturnType<typeof fakeAuthStore>
   let r2Bucket: ReturnType<typeof fakeR2Bucket>
   let app: Hono<CombinedEnv>
@@ -32,6 +33,7 @@ describe('products routes', () => {
 
   beforeEach(async () => {
     productStore = fakeProductStore()
+    certStore = fakeCertStore(productStore)
     authStore = fakeAuthStore()
     r2Bucket = fakeR2Bucket()
     const user = await authStore.createUser('admin@example.com', 'hash')
@@ -41,6 +43,7 @@ describe('products routes', () => {
     app.use('*', async (c, next) => {
       c.set('store', authStore)
       c.set('productStore', productStore)
+      c.set('certStore', certStore)
       await next()
     })
     app.use('/api/admin/products/*', requireAuth)
@@ -72,66 +75,49 @@ describe('products routes', () => {
     expect(res.status).toBe(401)
   })
 
-  it('creates a product and returns 201 with detail', async () => {
+  it('creates a product with auto-generated slug, serial, status=draft, and a certificate', async () => {
+    const res = await post(validInput())
+    expect(res.status).toBe(201)
+    const body = await json<ProductDetail & { certificate: { serialNo: string; qrToken: string } }>(res)
+
+    expect(body.slug.startsWith('kuka-tesbih')).toBe(true)
+    expect(body.status).toBe('draft')
+    expect(body.serialNo).not.toBeNull()
+    expect(isValidSerial(body.serialNo as string)).toBe(true)
+    expect(body.translations.tr?.name).toBe('Kuka Tesbih')
+
+    expect(body.certificate).toBeDefined()
+    expect(body.certificate.serialNo).toBe(body.serialNo)
+    expect(body.certificate.qrToken).toBeTypeOf('string')
+    expect(body.certificate.qrToken.length).toBeGreaterThan(0)
+
+    // Certificate row actually created in the store
+    expect(certStore.certificates).toHaveLength(1)
+    expect(certStore.certificates[0].productId).toBe(body.id)
+    expect(certStore.certificates[0].serialNo).toBe(body.serialNo)
+  })
+
+  it('appends a random suffix to the slug on collision', async () => {
+    // Seed an existing product with the slug that would be derived
+    await productStore.create({
+      slug: 'kuka-tesbih',
+      serialNo: '1111111111111119',
+      status: 'draft',
+      translations: { tr: { name: 'Kuka Tesbih', description: null, story: null } },
+    })
+
     const res = await post(validInput())
     expect(res.status).toBe(201)
     const body = await json<ProductDetail>(res)
-    expect(body).toMatchObject({
-      slug: 'ring-01',
-      status: 'draft',
-      translations: { tr: { name: 'Yüzük' } },
-    })
-    expect(body.id).toBeTypeOf('number')
-  })
-
-  it('rejects invalid slug format', async () => {
-    const res = await post(validInput({ slug: 'Not Valid Slug!' }))
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('rejects a duplicate slug with 409', async () => {
-    await post(validInput({ slug: 'ring-01' }))
-    const res = await post(validInput({ slug: 'ring-01' }))
-    expect(res.status).toBe(409)
-    expect(await res.json()).toEqual({ error: 'slug_taken' })
-  })
-
-  it('rejects a duplicate serial number with 409', async () => {
-    await post(validInput({ slug: 'ring-01', serialNo: 'SN-1' }))
-    const res = await post(validInput({ slug: 'ring-02', serialNo: 'SN-1' }))
-    expect(res.status).toBe(409)
-    expect(await res.json()).toEqual({ error: 'serial_taken' })
-  })
-
-  it('allows PUT to keep its own serial number unchanged', async () => {
-    const created = await json<ProductDetail>(await post(validInput({ slug: 'ring-01', serialNo: 'SN-1' })))
-    const res = await put(created.id, validInput({ slug: 'ring-01', serialNo: 'SN-1' }))
-    expect(res.status).toBe(200)
+    expect(body.slug).not.toBe('kuka-tesbih')
+    expect(body.slug.startsWith('kuka-tesbih-')).toBe(true)
+    expect(body.slug.length).toBe('kuka-tesbih-'.length + 4)
   })
 
   it('rejects missing tr.name with tr_name_required', async () => {
     const res = await post(validInput({ translations: { tr: { name: '', description: null, story: null } } }))
     expect(res.status).toBe(400)
     expect(await res.json()).toEqual({ error: 'tr_name_required' })
-  })
-
-  it('rejects an invalid status', async () => {
-    const res = await post(validInput({ status: 'archived' }))
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_status' })
-  })
-
-  it('rejects a negative price', async () => {
-    const res = await post(validInput({ price: -5 }))
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('rejects a non-integer price', async () => {
-    const res = await post(validInput({ price: 12.5 }))
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
   })
 
   it('rejects a non-object JSON body', async () => {
@@ -144,16 +130,58 @@ describe('products routes', () => {
     expect(await res.json()).toEqual({ error: 'invalid_request' })
   })
 
-  it('lists products with tr name and media count', async () => {
-    const created = await json<ProductDetail>(await post(validInput({ slug: 'ring-01' })))
+  it('accepts a fractional weightGrams and round-trips it in the detail', async () => {
+    const res = await post(validInput({ weightGrams: 33.6 }))
+    expect(res.status).toBe(201)
+    const body = await json<ProductDetail>(res)
+    expect(body.weightGrams).toBe(33.6)
+  })
+
+  it('rejects a negative weightGrams with invalid_request', async () => {
+    const res = await post(validInput({ weightGrams: -1 }))
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  })
+
+  it('rejects an Infinity weightGrams with invalid_request', async () => {
+    // JSON has no NaN/Infinity literal; JSON.stringify coerces both to null,
+    // which the validator correctly treats as "not provided". Exercise the
+    // finiteness check by sending a value that survives JSON round-tripping
+    // but still fails Number.isFinite in a way requests can actually trigger:
+    // a wire-format `1e400` overflows to Infinity on parse.
+    const res = await req('/api/admin/products', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie },
+      body: '{"weightGrams":1e400,"translations":{"tr":{"name":"Kuka Tesbih","description":null,"story":null}}}',
+    })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  })
+
+  it('rejects a string weightGrams with invalid_request', async () => {
+    const res = await post(validInput({ weightGrams: '33.6' }))
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  })
+
+  it('trims material/size, empty string becomes null', async () => {
+    const res = await post(validInput({ material: '  Gümüş  ', size: '   ' }))
+    expect(res.status).toBe(201)
+    const body = await json<ProductDetail>(res)
+    expect(body.material).toBe('Gümüş')
+    expect(body.size).toBeNull()
+  })
+
+  it('lists products with tr name, media count, and weightGrams', async () => {
+    const created = await json<ProductDetail>(await post(validInput({ weightGrams: 12 })))
     productStore.media.push({ id: 1, productId: created.id, type: 'image', r2Key: 'k1', kind: 'gallery', sort: 0 })
     productStore.media.push({ id: 2, productId: created.id, type: 'image', r2Key: 'k2', kind: 'gallery', sort: 1 })
 
     const res = await req('/api/admin/products', { headers: { cookie } })
     expect(res.status).toBe(200)
-    const body = await json<{ products: unknown[] }>(res)
+    const body = await json<{ products: { weightGrams: number | null }[] }>(res)
     expect(body.products).toHaveLength(1)
-    expect(body.products[0]).toMatchObject({ slug: 'ring-01', name: 'Yüzük', mediaCount: 2 })
+    expect(body.products[0]).toMatchObject({ name: 'Kuka Tesbih', mediaCount: 2, weightGrams: 12 })
   })
 
   it('returns 404 for a missing product', async () => {
@@ -168,11 +196,24 @@ describe('products routes', () => {
     expect(await res.json()).toEqual({ error: 'invalid_request' })
   })
 
+  it('PUT updates material/weight/translations, leaving slug/serial/status unchanged', async () => {
+    const created = await json<ProductDetail>(await post(validInput({ material: 'Gümüş', weightGrams: 10 })))
+
+    const res = await put(created.id, validInput({ material: 'Altın', weightGrams: 20, translations: { tr: { name: 'Yeni İsim', description: null, story: null } } }))
+    expect(res.status).toBe(200)
+    const body = await json<ProductDetail>(res)
+    expect(body.material).toBe('Altın')
+    expect(body.weightGrams).toBe(20)
+    expect(body.translations.tr?.name).toBe('Yeni İsim')
+    expect(body.slug).toBe(created.slug)
+    expect(body.serialNo).toBe(created.serialNo)
+    expect(body.status).toBe(created.status)
+  })
+
   it('replaces translations on PUT (en removed, tr kept)', async () => {
     const created = await json<ProductDetail>(
       await post(
         validInput({
-          slug: 'ring-01',
           translations: {
             tr: { name: 'Yüzük', description: null, story: null },
             en: { name: 'Ring', description: null, story: null },
@@ -182,7 +223,7 @@ describe('products routes', () => {
     )
     expect(created.translations.en).toBeDefined()
 
-    const res = await put(created.id, validInput({ slug: 'ring-01', translations: { tr: { name: 'Yüzük 2', description: null, story: null } } }))
+    const res = await put(created.id, validInput({ translations: { tr: { name: 'Yüzük 2', description: null, story: null } } }))
     expect(res.status).toBe(200)
     const body = await json<ProductDetail>(res)
     expect(body.translations.tr?.name).toBe('Yüzük 2')
@@ -194,8 +235,47 @@ describe('products routes', () => {
     expect(res.status).toBe(404)
   })
 
+  it('PUT rejects a negative weightGrams', async () => {
+    const created = await json<ProductDetail>(await post(validInput()))
+    const res = await put(created.id, validInput({ weightGrams: -5 }))
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  })
+
+  it('publishes a draft product', async () => {
+    const created = await json<ProductDetail>(await post(validInput()))
+    expect(created.status).toBe('draft')
+
+    const res = await req(`/api/admin/products/${created.id}/publish`, { method: 'POST', headers: { cookie } })
+    expect(res.status).toBe(200)
+    const body = await json<ProductDetail>(res)
+    expect(body.status).toBe('published')
+  })
+
+  it('unpublishes a published product back to draft', async () => {
+    const created = await json<ProductDetail>(await post(validInput()))
+    await req(`/api/admin/products/${created.id}/publish`, { method: 'POST', headers: { cookie } })
+
+    const res = await req(`/api/admin/products/${created.id}/unpublish`, { method: 'POST', headers: { cookie } })
+    expect(res.status).toBe(200)
+    const body = await json<ProductDetail>(res)
+    expect(body.status).toBe('draft')
+  })
+
+  it('returns 404 when publishing a missing product', async () => {
+    const res = await req('/api/admin/products/999/publish', { method: 'POST', headers: { cookie } })
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({ error: 'not_found' })
+  })
+
+  it('returns 404 when unpublishing a missing product', async () => {
+    const res = await req('/api/admin/products/999/unpublish', { method: 'POST', headers: { cookie } })
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({ error: 'not_found' })
+  })
+
   it('deletes a product; subsequent GET is 404', async () => {
-    const created = await json<ProductDetail>(await post(validInput({ slug: 'ring-01' })))
+    const created = await json<ProductDetail>(await post(validInput()))
     const delRes = await req(`/api/admin/products/${created.id}`, { method: 'DELETE', headers: { cookie } })
     expect(delRes.status).toBe(200)
     expect(await delRes.json()).toEqual({ ok: true })
@@ -210,11 +290,9 @@ describe('products routes', () => {
   })
 
   it('deletes product even when R2 delete fails', async () => {
-    // Create a product with media
-    const created = await json<ProductDetail>(await post(validInput({ slug: 'ring-01' })))
+    const created = await json<ProductDetail>(await post(validInput()))
     productStore.media.push({ id: 1, productId: created.id, type: 'image', r2Key: 'k1', kind: 'gallery', sort: 0 })
 
-    // Make R2 delete throw an error
     const throwingBucket = {
       ...r2Bucket,
       async delete() {
@@ -222,7 +300,6 @@ describe('products routes', () => {
       },
     }
 
-    // DELETE should still succeed and product should be gone
     const delRes = await app.request(
       `/api/admin/products/${created.id}`,
       { method: 'DELETE', headers: { cookie } },
@@ -231,195 +308,24 @@ describe('products routes', () => {
     expect(delRes.status).toBe(200)
     expect(await delRes.json()).toEqual({ ok: true })
 
-    // Verify product is deleted from store
     const getRes = await req(`/api/admin/products/${created.id}`, { headers: { cookie } })
     expect(getRes.status).toBe(404)
   })
-})
 
-describe('product steps routes', () => {
-  let productStore: ReturnType<typeof fakeProductStore>
-  let authStore: ReturnType<typeof fakeAuthStore>
-  let r2Bucket: ReturnType<typeof fakeR2Bucket>
-  let app: Hono<CombinedEnv>
-  const cookie = 'sid=test-session'
-
-  beforeEach(async () => {
-    productStore = fakeProductStore()
-    authStore = fakeAuthStore()
-    r2Bucket = fakeR2Bucket()
-    const user = await authStore.createUser('admin@example.com', 'hash')
-    await authStore.createSession('test-session', user.id, Math.floor(Date.now() / 1000) + 3600)
-
-    app = new Hono<CombinedEnv>()
-    app.use('*', async (c, next) => {
-      c.set('store', authStore)
-      c.set('productStore', productStore)
-      await next()
-    })
-    app.use('/api/admin/products/*', requireAuth)
-    app.use('/api/admin/steps/*', requireAuth)
-    app.route('/api/admin/products', productsRoutes)
-    app.route('/api/admin/steps', productStepsRoutes)
-  })
-
-  function req(path: string, init: RequestInit = {}) {
-    return app.request(path, init, { MEDIA: r2Bucket as unknown as R2Bucket })
-  }
-
-  async function createProduct(): Promise<ProductDetail> {
-    const res = await req('/api/admin/products', {
+  it('returns 404 for removed steps endpoints', async () => {
+    const created = await json<ProductDetail>(await post(validInput()))
+    const res = await req(`/api/admin/products/${created.id}/steps`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify(validInput()),
+      body: JSON.stringify({ texts: { tr: 'Döküm' } }),
     })
-    return json<ProductDetail>(res)
-  }
-
-  function addStep(productId: number, body: unknown) {
-    return req(`/api/admin/products/${productId}/steps`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify(body),
-    })
-  }
-
-  function updateStep(stepId: number | string, body: unknown) {
-    return req(`/api/admin/steps/${stepId}`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify(body),
-    })
-  }
-
-  it('blocks unauthenticated access to steps endpoint', async () => {
-    const res = await req('/api/admin/steps/1', { method: 'DELETE' })
-    expect(res.status).toBe(401)
-  })
-
-  it('adds a step with auto-incrementing sort', async () => {
-    const product = await createProduct()
-
-    const res1 = await addStep(product.id, { texts: { tr: 'Döküm' } })
-    expect(res1.status).toBe(201)
-    const step1 = await json<ProcessStep>(res1)
-    expect(step1).toMatchObject({ sort: 0, texts: { tr: 'Döküm' } })
-
-    const res2 = await addStep(product.id, { texts: { tr: 'Cilalama' } })
-    expect(res2.status).toBe(201)
-    const step2 = await json<ProcessStep>(res2)
-    expect(step2.sort).toBe(1)
-  })
-
-  it('rejects a missing/empty texts.tr with invalid_request', async () => {
-    const product = await createProduct()
-    const res = await addStep(product.id, { texts: { en: 'Casting' } })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-
-    const res2 = await addStep(product.id, { texts: { tr: '   ' } })
-    expect(res2.status).toBe(400)
-    expect(await res2.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('returns 404 when adding a step to a missing product', async () => {
-    const res = await addStep(999, { texts: { tr: 'Döküm' } })
-    expect(res.status).toBe(404)
-    expect(await res.json()).toEqual({ error: 'not_found' })
-  })
-
-  it('respects an explicit sort value on add', async () => {
-    const product = await createProduct()
-    const res = await addStep(product.id, { texts: { tr: 'Döküm' }, sort: 5 })
-    const step = await json<ProcessStep>(res)
-    expect(step.sort).toBe(5)
-  })
-
-  it('appends new step after existing max sort, not by count (when sort is non-contiguous)', async () => {
-    const product = await createProduct()
-
-    // Add two steps with sort 0 and 1
-    const res1 = await addStep(product.id, { texts: { tr: 'Step 1' } })
-    expect(res1.status).toBe(201)
-    const step1 = await json<ProcessStep>(res1)
-    expect(step1.sort).toBe(0)
-
-    const res2 = await addStep(product.id, { texts: { tr: 'Step 2' } })
-    expect(res2.status).toBe(201)
-    const step2 = await json<ProcessStep>(res2)
-    expect(step2.sort).toBe(1)
-
-    // PUT step2's sort to 10, creating a gap
-    const putRes = await updateStep(step2.id, { texts: { tr: 'Step 2 updated' }, sort: 10 })
-    expect(putRes.status).toBe(200)
-
-    // POST a third step without sort — should append to max (10), not count (3)
-    const res3 = await addStep(product.id, { texts: { tr: 'Step 3' } })
-    expect(res3.status).toBe(201)
-    const step3 = await json<ProcessStep>(res3)
-    expect(step3.sort).toBe(11)
-  })
-
-  it('updates a step, replacing texts entirely and changing sort', async () => {
-    const product = await createProduct()
-    const created = await json<ProcessStep>(await addStep(product.id, { texts: { tr: 'Döküm', en: 'Casting' } }))
-
-    const res = await updateStep(created.id, { texts: { tr: 'Cilalama' }, sort: 3 })
-    expect(res.status).toBe(200)
-    const updated = await json<ProcessStep>(res)
-    expect(updated).toMatchObject({ id: created.id, sort: 3, texts: { tr: 'Cilalama' } })
-    expect(updated.texts.en).toBeUndefined()
-  })
-
-  it('rejects update with missing tr text', async () => {
-    const product = await createProduct()
-    const created = await json<ProcessStep>(await addStep(product.id, { texts: { tr: 'Döküm' } }))
-    const res = await updateStep(created.id, { texts: { en: 'Casting' }, sort: 0 })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('rejects update with missing sort', async () => {
-    const product = await createProduct()
-    const created = await json<ProcessStep>(await addStep(product.id, { texts: { tr: 'Döküm' } }))
-    const res = await updateStep(created.id, { texts: { tr: 'Cilalama' } })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('returns 404 when updating a missing step', async () => {
-    const res = await updateStep(999, { texts: { tr: 'Döküm' }, sort: 0 })
-    expect(res.status).toBe(404)
-    expect(await res.json()).toEqual({ error: 'not_found' })
-  })
-
-  it('returns 400 for a non-numeric stepId on update', async () => {
-    const res = await updateStep('abc', { texts: { tr: 'Döküm' } })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('deletes a step; subsequent update is 404', async () => {
-    const product = await createProduct()
-    const created = await json<ProcessStep>(await addStep(product.id, { texts: { tr: 'Döküm' } }))
-
-    const delRes = await req(`/api/admin/steps/${created.id}`, { method: 'DELETE', headers: { cookie } })
-    expect(delRes.status).toBe(200)
-    expect(await delRes.json()).toEqual({ ok: true })
-
-    const res = await updateStep(created.id, { texts: { tr: 'Döküm' }, sort: 0 })
     expect(res.status).toBe(404)
   })
 
-  it('returns 404 when deleting a missing step', async () => {
-    const res = await req('/api/admin/steps/999', { method: 'DELETE', headers: { cookie } })
-    expect(res.status).toBe(404)
-    expect(await res.json()).toEqual({ error: 'not_found' })
-  })
-
-  it('returns 400 for a non-numeric stepId on delete', async () => {
-    const res = await req('/api/admin/steps/abc', { method: 'DELETE', headers: { cookie } })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  it('GET detail returns steps as an empty array', async () => {
+    const created = await json<ProductDetail>(await post(validInput()))
+    const res = await req(`/api/admin/products/${created.id}`, { headers: { cookie } })
+    const body = await json<ProductDetail>(res)
+    expect(body.steps).toEqual([])
   })
 })

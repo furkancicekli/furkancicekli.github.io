@@ -22,7 +22,6 @@ function soldProductInput(overrides: Partial<ProductInput> = {}): ProductInput {
     status: 'sold',
     material: 'Gümüş',
     size: 'M',
-    price: 1000,
     translations: { tr: { name: 'Ürün 1', description: null, story: null } },
     ...overrides,
   }

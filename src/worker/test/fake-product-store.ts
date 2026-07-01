@@ -6,6 +6,7 @@ import type {
   ProductListItem,
   ProductMediaItem,
   ProductStore,
+  ProductUpdateInput,
 } from '../db/products'
 
 type InternalMedia = ProductMediaItem & { productId: number }
@@ -59,7 +60,7 @@ export function fakeProductStore(): ProductStore & {
         serialNo: p.serialNo,
         status: p.status,
         name: p.translations.tr?.name ?? null,
-        price: p.price,
+        weightGrams: p.weightGrams,
         mediaCount: mediaCount(p.id),
         createdAt: p.createdAt,
       }))
@@ -85,7 +86,7 @@ export function fakeProductStore(): ProductStore & {
         status: input.status,
         material: input.material ?? null,
         size: input.size ?? null,
-        price: input.price ?? null,
+        weightGrams: input.weightGrams ?? null,
         createdAt: now,
         updatedAt: now,
         translations: { ...input.translations },
@@ -95,17 +96,21 @@ export function fakeProductStore(): ProductStore & {
       products.push(p)
       return toDetail(p)
     },
-    async update(id: number, input: ProductInput): Promise<ProductDetail | null> {
+    async update(id: number, input: ProductUpdateInput): Promise<ProductDetail | null> {
       const p = products.find((x) => x.id === id)
       if (!p) return null
-      p.slug = input.slug
-      p.serialNo = input.serialNo ?? null
-      p.status = input.status
       p.material = input.material ?? null
       p.size = input.size ?? null
-      p.price = input.price ?? null
+      p.weightGrams = input.weightGrams ?? null
       p.updatedAt = Math.floor(Date.now() / 1000)
       p.translations = { ...input.translations }
+      return toDetail(p)
+    },
+    async setStatus(id: number, status: ProductDetail['status']): Promise<ProductDetail | null> {
+      const p = products.find((x) => x.id === id)
+      if (!p) return null
+      p.status = status
+      p.updatedAt = Math.floor(Date.now() / 1000)
       return toDetail(p)
     },
     async delete(id: number): Promise<boolean> {

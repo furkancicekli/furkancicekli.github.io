@@ -7,7 +7,7 @@ export interface ProductListItem {
   serialNo: string | null
   status: ProductStatus
   name: string | null
-  price: number | null
+  weightGrams: number | null
   mediaCount: number
   createdAt: number
 }
@@ -39,7 +39,7 @@ export interface ProductDetail {
   status: ProductStatus
   material: string | null
   size: string | null
-  price: number | null
+  weightGrams: number | null
   createdAt: number
   updatedAt: number
   translations: Partial<Record<Lang, ProductTranslation>>
@@ -47,13 +47,25 @@ export interface ProductDetail {
   steps: ProcessStep[]
 }
 
+/** Full input accepted by the store's create(): includes server-managed fields
+ * (slug/serialNo/status) because the route layer computes those before calling
+ * the store. HTTP-level input validation (routes/products.ts) exposes a
+ * narrower shape that omits slug/serialNo/status/price entirely. */
 export interface ProductInput {
   slug: string
   serialNo?: string | null
   status: ProductStatus
   material?: string | null
   size?: string | null
-  price?: number | null
+  weightGrams?: number | null
+  translations: Partial<Record<Lang, ProductTranslation>>
+}
+
+/** Fields an admin can change via PUT: never slug/serial/status/price. */
+export interface ProductUpdateInput {
+  material?: string | null
+  size?: string | null
+  weightGrams?: number | null
   translations: Partial<Record<Lang, ProductTranslation>>
 }
 
@@ -63,7 +75,8 @@ export interface ProductStore {
   findBySlug(slug: string): Promise<{ id: number } | null>
   findBySerial(serialNo: string): Promise<{ id: number } | null>
   create(input: ProductInput): Promise<ProductDetail>
-  update(id: number, input: ProductInput): Promise<ProductDetail | null>
+  update(id: number, input: ProductUpdateInput): Promise<ProductDetail | null>
+  setStatus(id: number, status: ProductStatus): Promise<ProductDetail | null>
   delete(id: number): Promise<boolean>
   addStep(productId: number, texts: Partial<Record<Lang, string>>, sort: number): Promise<ProcessStep>
   updateStep(stepId: number, texts: Partial<Record<Lang, string>>, sort: number): Promise<ProcessStep | null>
@@ -138,7 +151,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
       const { results } = await db
         .prepare(
           `SELECT p.id AS id, p.slug AS slug, p.serial_no AS serial_no, p.status AS status,
-                  p.price AS price, p.created_at AS created_at,
+                  p.weight_grams AS weight_grams, p.created_at AS created_at,
                   t.name AS name, COALESCE(m.cnt, 0) AS media_count
            FROM products p
            LEFT JOIN product_translations t ON t.product_id = p.id AND t.lang = 'tr'
@@ -151,7 +164,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
           slug: string
           serial_no: string | null
           status: ProductStatus
-          price: number | null
+          weight_grams: number | null
           created_at: number
           name: string | null
           media_count: number
@@ -162,7 +175,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
         serialNo: row.serial_no,
         status: row.status,
         name: row.name,
-        price: row.price,
+        weightGrams: row.weight_grams,
         mediaCount: row.media_count,
         createdAt: row.created_at,
       }))
@@ -171,7 +184,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
     async get(id) {
       const row = await db
         .prepare(
-          `SELECT id, slug, serial_no, status, material, size, price, created_at, updated_at
+          `SELECT id, slug, serial_no, status, material, size, weight_grams, created_at, updated_at
            FROM products WHERE id = ?`,
         )
         .bind(id)
@@ -182,7 +195,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
           status: ProductStatus
           material: string | null
           size: string | null
-          price: number | null
+          weight_grams: number | null
           created_at: number
           updated_at: number
         }>()
@@ -195,7 +208,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
         status: row.status,
         material: row.material,
         size: row.size,
-        price: row.price,
+        weightGrams: row.weight_grams,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         translations,
@@ -217,7 +230,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
     async create(input) {
       const row = await db
         .prepare(
-          `INSERT INTO products (slug, serial_no, status, material, size, price)
+          `INSERT INTO products (slug, serial_no, status, material, size, weight_grams)
            VALUES (?, ?, ?, ?, ?, ?)
            RETURNING id`,
         )
@@ -227,7 +240,7 @@ export function d1ProductStore(db: D1Database): ProductStore {
           input.status,
           input.material ?? null,
           input.size ?? null,
-          input.price ?? null,
+          input.weightGrams ?? null,
         )
         .first<{ id: number }>()
       if (!row) throw new Error('failed to create product')
@@ -242,21 +255,23 @@ export function d1ProductStore(db: D1Database): ProductStore {
       if (!existing) return null
       await db
         .prepare(
-          `UPDATE products SET slug = ?, serial_no = ?, status = ?, material = ?, size = ?, price = ?, updated_at = unixepoch()
+          `UPDATE products SET material = ?, size = ?, weight_grams = ?, updated_at = unixepoch()
            WHERE id = ?`,
         )
-        .bind(
-          input.slug,
-          input.serialNo ?? null,
-          input.status,
-          input.material ?? null,
-          input.size ?? null,
-          input.price ?? null,
-          id,
-        )
+        .bind(input.material ?? null, input.size ?? null, input.weightGrams ?? null, id)
         .run()
       await db.prepare('DELETE FROM product_translations WHERE product_id = ?').bind(id).run()
       await insertTranslations(id, input.translations)
+      return this.get(id)
+    },
+
+    async setStatus(id, status) {
+      const existing = await db.prepare('SELECT id FROM products WHERE id = ?').bind(id).first<{ id: number }>()
+      if (!existing) return null
+      await db
+        .prepare('UPDATE products SET status = ?, updated_at = unixepoch() WHERE id = ?')
+        .bind(status, id)
+        .run()
       return this.get(id)
     },
 

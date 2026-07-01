@@ -7,6 +7,7 @@ import type { AuthEnv } from './auth'
 import type { ProductDetail } from '../db/products'
 import { fakeAuthStore } from '../test/fake-auth-store'
 import { fakeProductStore } from '../test/fake-product-store'
+import { fakeCertStore } from '../test/fake-cert-store'
 import { fakeR2Bucket } from '../test/fake-r2-bucket'
 
 async function json<T = unknown>(res: Response): Promise<T> {
@@ -20,8 +21,6 @@ type CombinedEnv = {
 
 function validInput(overrides: Record<string, unknown> = {}) {
   return {
-    slug: 'ring-01',
-    status: 'draft',
     translations: { tr: { name: 'Yüzük', description: null, story: null } },
     ...overrides,
   }
@@ -45,6 +44,7 @@ describe('media routes (admin)', () => {
     app.use('*', async (c, next) => {
       c.set('store', authStore)
       c.set('productStore', productStore)
+      c.set('certStore', fakeCertStore(productStore))
       await next()
     })
     app.use('/api/admin/products/*', requireAuth)
@@ -274,6 +274,7 @@ describe('product DELETE removes all R2 objects', () => {
     app.use('*', async (c, next) => {
       c.set('store', authStore)
       c.set('productStore', productStore)
+      c.set('certStore', fakeCertStore(productStore))
       await next()
     })
     app.use('/api/admin/products/*', requireAuth)

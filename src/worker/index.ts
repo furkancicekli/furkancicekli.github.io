@@ -11,7 +11,7 @@ import { d1MaterialStore } from './db/materials'
 import type { MaterialStore } from './db/materials'
 import { authRoutes } from './routes/auth'
 import { adminRoutes } from './routes/admin'
-import { productsRoutes, productStepsRoutes } from './routes/products'
+import { productsRoutes } from './routes/products'
 import { mediaRoutes, publicMediaRoutes } from './routes/media'
 import { adminFaqsRoutes, publicFaqsRoutes } from './routes/faqs'
 import { adminCertificatesRoutes, publicVerifyRoutes } from './routes/certificates'
@@ -71,7 +71,6 @@ app.use('/api/verify/*', async (c, next) => {
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin/products', productsRoutes)
 app.route('/api/admin', mediaRoutes)
-app.route('/api/admin/steps', productStepsRoutes)
 app.route('/api/admin/faqs', adminFaqsRoutes)
 app.route('/api/admin/certificates', adminCertificatesRoutes)
 app.route('/api/admin/materials', adminMaterialsRoutes)

@@ -1,24 +1,43 @@
 import { Hono } from 'hono'
-import type { ProductInput, ProductStatus, ProductStore, ProductTranslation, Lang } from '../db/products'
+import type { ProductStore, ProductTranslation, Lang } from '../db/products'
+import type { CertStore } from '../db/certificates'
+import { slugify, generateSerial } from '../lib/serial'
+import { newToken } from './certificates'
 
 export type ProductsEnv = {
   Bindings: { DB: D1Database; MEDIA: R2Bucket }
-  Variables: { productStore: ProductStore; user?: { id: number; email: string } }
+  Variables: { productStore: ProductStore; certStore: CertStore; user?: { id: number; email: string } }
 }
 
 export const productsRoutes = new Hono<ProductsEnv>()
-export const productStepsRoutes = new Hono<ProductsEnv>()
 
-const SLUG_RE = /^[a-z0-9-]{1,64}$/
-const STATUSES: ProductStatus[] = ['draft', 'published', 'sold']
 const LANGS: Lang[] = ['tr', 'en', 'ar']
+const MAX_SLUG_RETRIES = 5
+const MAX_SERIAL_RETRIES = 5
+const SLUG_SUFFIX_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
-type ValidatedInput = { ok: true; input: ProductInput } | { ok: false; error: string }
+type ProductFormInput = {
+  material: string | null
+  size: string | null
+  weightGrams: number | null
+  translations: Partial<Record<Lang, ProductTranslation>>
+}
+
+type ValidatedInput = { ok: true; input: ProductFormInput } | { ok: false; error: string }
 
 function trimOrNull(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   return trimmed === '' ? null : trimmed
+}
+
+function randomSlugSuffix(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(4))
+  let suffix = ''
+  for (let i = 0; i < 4; i++) {
+    suffix += SLUG_SUFFIX_CHARS[bytes[i] % SLUG_SUFFIX_CHARS.length]
+  }
+  return suffix
 }
 
 function parseTranslations(raw: unknown): Partial<Record<Lang, ProductTranslation>> | null {
@@ -40,26 +59,12 @@ function parseTranslations(raw: unknown): Partial<Record<Lang, ProductTranslatio
 }
 
 function validateInput(body: Record<string, unknown>): ValidatedInput {
-  const slug = body.slug
-  if (typeof slug !== 'string' || !SLUG_RE.test(slug)) return { ok: false, error: 'invalid_request' }
-
-  const status = body.status
-  if (typeof status !== 'string' || !STATUSES.includes(status as ProductStatus)) {
-    return { ok: false, error: 'invalid_status' }
-  }
-
-  let serialNo: string | null = null
-  if (body.serialNo !== undefined && body.serialNo !== null) {
-    if (typeof body.serialNo !== 'string') return { ok: false, error: 'invalid_request' }
-    serialNo = trimOrNull(body.serialNo)
-  }
-
-  let price: number | null = null
-  if (body.price !== undefined && body.price !== null) {
-    if (typeof body.price !== 'number' || !Number.isInteger(body.price) || body.price < 0) {
+  let weightGrams: number | null = null
+  if (body.weightGrams !== undefined && body.weightGrams !== null) {
+    if (typeof body.weightGrams !== 'number' || !Number.isFinite(body.weightGrams) || body.weightGrams < 0) {
       return { ok: false, error: 'invalid_request' }
     }
-    price = body.price
+    weightGrams = body.weightGrams
   }
 
   const translations = parseTranslations(body.translations)
@@ -72,44 +77,35 @@ function validateInput(body: Record<string, unknown>): ValidatedInput {
   return {
     ok: true,
     input: {
-      slug,
-      serialNo,
-      status: status as ProductStatus,
       material,
       size,
-      price,
+      weightGrams,
       translations,
     },
   }
 }
 
-type ValidatedStepInput = { ok: true; texts: Partial<Record<Lang, string>>; sort?: number } | { ok: false; error: string }
+async function generateUniqueSlug(store: ProductStore, name: string): Promise<string | null> {
+  const base = slugify(name)
+  const existing = await store.findBySlug(base)
+  if (!existing) return base
 
-function validateStepInput(body: Record<string, unknown>, opts: { requireSort: boolean } = { requireSort: false }): ValidatedStepInput {
-  const rawTexts = body.texts
-  if (typeof rawTexts !== 'object' || rawTexts === null) return { ok: false, error: 'invalid_request' }
-  const src = rawTexts as Record<string, unknown>
-
-  const trText = trimOrNull(src.tr)
-  if (!trText) return { ok: false, error: 'invalid_request' }
-
-  const texts: Partial<Record<Lang, string>> = { tr: trText }
-  for (const lang of LANGS) {
-    if (lang === 'tr') continue
-    if (src[lang] === undefined) continue
-    const value = trimOrNull(src[lang])
-    if (value) texts[lang] = value
+  for (let attempt = 0; attempt < MAX_SLUG_RETRIES; attempt++) {
+    const candidate = `${base}-${randomSlugSuffix()}`
+    const hit = await store.findBySlug(candidate)
+    if (!hit) return candidate
   }
+  return null
+}
 
-  if (body.sort === undefined) {
-    if (opts.requireSort) return { ok: false, error: 'invalid_request' }
-    return { ok: true, texts, sort: undefined }
+async function generateUniqueSerial(store: ProductStore): Promise<string | null> {
+  const year = new Date().getFullYear()
+  for (let attempt = 0; attempt < MAX_SERIAL_RETRIES; attempt++) {
+    const candidate = generateSerial(year)
+    const hit = await store.findBySerial(candidate)
+    if (!hit) return candidate
   }
-  if (typeof body.sort !== 'number' || !Number.isInteger(body.sort) || body.sort < 0) {
-    return { ok: false, error: 'invalid_request' }
-  }
-
-  return { ok: true, texts, sort: body.sort }
+  return null
 }
 
 productsRoutes.get('/', async (c) => {
@@ -131,16 +127,28 @@ productsRoutes.post('/', async (c) => {
   if (!validated.ok) return c.json({ error: validated.error }, 400)
 
   const store = c.get('productStore')
-  const bySlug = await store.findBySlug(validated.input.slug)
-  if (bySlug) return c.json({ error: 'slug_taken' }, 409)
+  const name = validated.input.translations.tr?.name as string
 
-  if (validated.input.serialNo) {
-    const bySerial = await store.findBySerial(validated.input.serialNo)
-    if (bySerial) return c.json({ error: 'serial_taken' }, 409)
-  }
+  const slug = await generateUniqueSlug(store, name)
+  if (!slug) return c.json({ error: 'slug_generation_failed' }, 500)
 
-  const detail = await store.create(validated.input)
-  return c.json(detail, 201)
+  const serialNo = await generateUniqueSerial(store)
+  if (!serialNo) return c.json({ error: 'serial_generation_failed' }, 500)
+
+  const detail = await store.create({
+    slug,
+    serialNo,
+    status: 'draft',
+    material: validated.input.material,
+    size: validated.input.size,
+    weightGrams: validated.input.weightGrams,
+    translations: validated.input.translations,
+  })
+
+  const certStore = c.get('certStore')
+  const certificate = await certStore.create(detail.id, serialNo, newToken(), null)
+
+  return c.json({ ...detail, certificate: { serialNo: certificate.serialNo, qrToken: certificate.qrToken } }, 201)
 })
 
 productsRoutes.get('/:id', async (c) => {
@@ -171,15 +179,29 @@ productsRoutes.put('/:id', async (c) => {
   if (!validated.ok) return c.json({ error: validated.error }, 400)
 
   const store = c.get('productStore')
-  const bySlug = await store.findBySlug(validated.input.slug)
-  if (bySlug && bySlug.id !== id) return c.json({ error: 'slug_taken' }, 409)
-
-  if (validated.input.serialNo) {
-    const bySerial = await store.findBySerial(validated.input.serialNo)
-    if (bySerial && bySerial.id !== id) return c.json({ error: 'serial_taken' }, 409)
-  }
-
   const detail = await store.update(id, validated.input)
+  if (!detail) return c.json({ error: 'not_found' }, 404)
+  return c.json(detail)
+})
+
+productsRoutes.post('/:id/publish', async (c) => {
+  const idParam = c.req.param('id')
+  const id = Number(idParam)
+  if (!Number.isInteger(id)) return c.json({ error: 'invalid_request' }, 400)
+
+  const store = c.get('productStore')
+  const detail = await store.setStatus(id, 'published')
+  if (!detail) return c.json({ error: 'not_found' }, 404)
+  return c.json(detail)
+})
+
+productsRoutes.post('/:id/unpublish', async (c) => {
+  const idParam = c.req.param('id')
+  const id = Number(idParam)
+  if (!Number.isInteger(id)) return c.json({ error: 'invalid_request' }, 400)
+
+  const store = c.get('productStore')
+  const detail = await store.setStatus(id, 'draft')
   if (!detail) return c.json({ error: 'not_found' }, 404)
   return c.json(detail)
 })
@@ -203,69 +225,6 @@ productsRoutes.delete('/:id', async (c) => {
   }
 
   const deleted = await store.delete(id)
-  if (!deleted) return c.json({ error: 'not_found' }, 404)
-  return c.json({ ok: true })
-})
-
-productsRoutes.post('/:id/steps', async (c) => {
-  const idParam = c.req.param('id')
-  const id = Number(idParam)
-  if (!Number.isInteger(id)) return c.json({ error: 'invalid_request' }, 400)
-
-  let body: unknown
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'invalid_request' }, 400)
-  }
-  if (typeof body !== 'object' || body === null) return c.json({ error: 'invalid_request' }, 400)
-
-  const validated = validateStepInput(body as Record<string, unknown>)
-  if (!validated.ok) return c.json({ error: validated.error }, 400)
-
-  const store = c.get('productStore')
-  const product = await store.get(id)
-  if (!product) return c.json({ error: 'not_found' }, 404)
-
-  const sort =
-    validated.sort !== undefined
-      ? validated.sort
-      : product.steps.length === 0
-        ? 0
-        : Math.max(...product.steps.map((s) => s.sort)) + 1
-  const step = await store.addStep(id, validated.texts, sort)
-  return c.json(step, 201)
-})
-
-productStepsRoutes.put('/:stepId', async (c) => {
-  const stepIdParam = c.req.param('stepId')
-  const stepId = Number(stepIdParam)
-  if (!Number.isInteger(stepId)) return c.json({ error: 'invalid_request' }, 400)
-
-  let body: unknown
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'invalid_request' }, 400)
-  }
-  if (typeof body !== 'object' || body === null) return c.json({ error: 'invalid_request' }, 400)
-
-  const validated = validateStepInput(body as Record<string, unknown>, { requireSort: true })
-  if (!validated.ok) return c.json({ error: validated.error }, 400)
-
-  const store = c.get('productStore')
-  const step = await store.updateStep(stepId, validated.texts, validated.sort as number)
-  if (!step) return c.json({ error: 'not_found' }, 404)
-  return c.json(step)
-})
-
-productStepsRoutes.delete('/:stepId', async (c) => {
-  const stepIdParam = c.req.param('stepId')
-  const stepId = Number(stepIdParam)
-  if (!Number.isInteger(stepId)) return c.json({ error: 'invalid_request' }, 400)
-
-  const store = c.get('productStore')
-  const deleted = await store.deleteStep(stepId)
   if (!deleted) return c.json({ error: 'not_found' }, 404)
   return c.json({ ok: true })
 })
