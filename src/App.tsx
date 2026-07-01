@@ -11,6 +11,7 @@ import {
   AdminComingSoonPage,
   AdminProductsPage,
   AdminProductEditPage,
+  AdminProductWizard,
   AdminProcessPage,
   AdminFaqPage,
   AdminCertificatesPage,
@@ -60,7 +61,7 @@ function App() {
             <Route index element={<AdminDashboardPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="products" element={<AdminProductsPage />} />
-            <Route path="products/new" element={<AdminProductEditPage />} />
+            <Route path="products/new" element={<AdminProductWizard />} />
             <Route path="products/:id" element={<AdminProductEditPage />} />
             <Route path="process" element={<AdminProcessPage />} />
             <Route path="faq" element={<AdminFaqPage />} />

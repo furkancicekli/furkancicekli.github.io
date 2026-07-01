@@ -1,24 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  addStep,
-  createProduct,
-  deleteMedia,
-  deleteProduct,
-  deleteStep,
-  getProduct,
-  updateProduct,
-  updateStep,
-  uploadProductMedia,
-} from './api'
-import type { Lang, ProcessStep, ProductMediaItem, ProductStatus, ProductTranslation } from './api'
+import { createProduct, deleteMedia, deleteProduct, getProduct, updateProduct, uploadProductMedia } from './api'
+import type { Lang, ProductMediaItem, ProductTranslation } from './api'
 
 const ERROR_MESSAGES: Record<string, string> = {
-  slug_taken: 'Bu slug başka bir üründe kullanılıyor.',
-  serial_taken: 'Bu seri numarası başka bir üründe.',
   tr_name_required: 'Türkçe ürün adı zorunlu.',
-  invalid_status: 'Form bilgilerini kontrol et.',
   invalid_request: 'Form bilgilerini kontrol et.',
   invalid_file: 'Desteklenmeyen dosya türü (JPEG/PNG/WebP/MP4).',
   file_too_large: 'Dosya 15 MB sınırını aşıyor.',
@@ -38,12 +25,6 @@ const MEDIA_KIND_LABEL: Record<ProductMediaItem['kind'], string> = {
   raw_material: 'Hammadde',
   process: 'Süreç',
 }
-
-const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
-  { value: 'draft', label: 'Taslak' },
-  { value: 'published', label: 'Yayında' },
-  { value: 'sold', label: 'Satıldı' },
-]
 
 const LANGS: { value: Lang; label: string }[] = [
   { value: 'tr', label: 'Türkçe' },
@@ -80,18 +61,9 @@ export function AdminProductEditPage() {
   const [mediaError, setMediaError] = useState<string | null>(null)
   const mediaFileInputRef = useRef<HTMLInputElement>(null)
 
-  const [steps, setSteps] = useState<ProcessStep[]>([])
-  const [stepDrafts, setStepDrafts] = useState<Record<number, Partial<Record<Lang, string>>>>({})
-  const [stepsBusy, setStepsBusy] = useState(false)
-  const [stepsError, setStepsError] = useState<string | null>(null)
-  const [newStepTr, setNewStepTr] = useState('')
-
-  const [slug, setSlug] = useState('')
-  const [serialNo, setSerialNo] = useState('')
-  const [status, setStatus] = useState<ProductStatus>('draft')
   const [material, setMaterial] = useState('')
   const [size, setSize] = useState('')
-  const [price, setPrice] = useState('')
+  const [weightGrams, setWeightGrams] = useState('')
   const [translations, setTranslations] = useState<Record<Lang, ProductTranslation>>(emptyTranslations())
   const [activeLang, setActiveLang] = useState<Lang>('tr')
 
@@ -109,12 +81,9 @@ export function AdminProductEditPage() {
         return
       }
       const p = result.data
-      setSlug(p.slug)
-      setSerialNo(p.serialNo ?? '')
-      setStatus(p.status)
       setMaterial(p.material ?? '')
       setSize(p.size ?? '')
-      setPrice(p.price !== null ? String(p.price) : '')
+      setWeightGrams(p.weightGrams !== null ? String(p.weightGrams) : '')
       const next = emptyTranslations()
       for (const lang of ['tr', 'en', 'ar'] as Lang[]) {
         const t = p.translations[lang]
@@ -122,7 +91,6 @@ export function AdminProductEditPage() {
       }
       setTranslations(next)
       setMedia(p.media)
-      setSteps([...p.steps].sort((a, b) => a.sort - b.sort))
       setLoading(false)
     })
     return () => {
@@ -134,14 +102,13 @@ export function AdminProductEditPage() {
     setTranslations((prev) => ({ ...prev, [lang]: { ...prev[lang], [field]: value === '' ? null : value } }))
   }
 
-  // Medya/adım mutasyonlarından sonra sadece o iki listeyi tazeler — form
+  // Medya mutasyonlarından sonra sadece medya listesini tazeler — form
   // alanlarındaki kaydedilmemiş değişiklikleri ezmez.
-  async function refreshMediaAndSteps() {
+  async function refreshMedia() {
     if (productId === null) return
     const result = await getProduct(productId)
     if (result.ok) {
       setMedia(result.data.media)
-      setSteps([...result.data.steps].sort((a, b) => a.sort - b.sort))
     }
   }
 
@@ -149,23 +116,20 @@ export function AdminProductEditPage() {
     e.preventDefault()
     setMessage(null)
 
-    let parsedPrice: number | null = null
-    if (price.trim() !== '') {
-      const n = Number(price)
-      if (!Number.isInteger(n) || n < 0) {
+    let parsedWeight: number | null = null
+    if (weightGrams.trim() !== '') {
+      const n = Number(weightGrams)
+      if (!Number.isFinite(n) || n < 0) {
         setMessage({ kind: 'error', text: ERROR_MESSAGES.invalid_request })
         return
       }
-      parsedPrice = n
+      parsedWeight = n
     }
 
     const input = {
-      slug,
-      serialNo: serialNo.trim() === '' ? null : serialNo.trim(),
-      status,
       material: material.trim() === '' ? null : material.trim(),
       size: size.trim() === '' ? null : size.trim(),
-      price: parsedPrice,
+      weightGrams: parsedWeight,
       translations,
     }
 
@@ -212,7 +176,7 @@ export function AdminProductEditPage() {
       return
     }
     if (mediaFileInputRef.current) mediaFileInputRef.current.value = ''
-    await refreshMediaAndSteps()
+    await refreshMedia()
   }
 
   async function handleDeleteMedia(mediaId: number) {
@@ -225,86 +189,7 @@ export function AdminProductEditPage() {
       setMediaError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
       return
     }
-    await refreshMediaAndSteps()
-  }
-
-  function updateStepDraft(stepId: number, field: Lang, value: string) {
-    setStepDrafts((prev) => ({
-      ...prev,
-      [stepId]: { ...(prev[stepId] ?? {}), [field]: value },
-    }))
-  }
-
-  function stepDraftTexts(step: ProcessStep): Partial<Record<Lang, string>> {
-    return { ...step.texts, ...stepDrafts[step.id] }
-  }
-
-  async function handleSaveStep(step: ProcessStep) {
-    setStepsError(null)
-    setStepsBusy(true)
-    const result = await updateStep(step.id, stepDraftTexts(step), step.sort)
-    setStepsBusy(false)
-    if (!result.ok) {
-      setStepsError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
-    }
-    setStepDrafts((prev) => {
-      const next = { ...prev }
-      delete next[step.id]
-      return next
-    })
-    await refreshMediaAndSteps()
-  }
-
-  async function handleDeleteStep(stepId: number) {
-    if (!window.confirm('Bu adım silinecek. Emin misin?')) return
-    setStepsError(null)
-    setStepsBusy(true)
-    const result = await deleteStep(stepId)
-    setStepsBusy(false)
-    if (!result.ok) {
-      setStepsError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
-    }
-    await refreshMediaAndSteps()
-  }
-
-  async function handleMoveStep(index: number, direction: -1 | 1) {
-    const neighborIndex = index + direction
-    if (neighborIndex < 0 || neighborIndex >= steps.length) return
-    const current = steps[index]
-    const neighbor = steps[neighborIndex]
-    setStepsError(null)
-    setStepsBusy(true)
-    try {
-      const [res1, res2] = await Promise.all([
-        updateStep(current.id, current.texts, neighbor.sort),
-        updateStep(neighbor.id, neighbor.texts, current.sort),
-      ])
-      if (!res1.ok || !res2.ok) {
-        setStepsError(ERROR_MESSAGES.unknown)
-      }
-    } finally {
-      setStepsBusy(false)
-      await refreshMediaAndSteps()
-    }
-  }
-
-  async function handleAddStep(e: FormEvent) {
-    e.preventDefault()
-    if (productId === null) return
-    const tr = newStepTr.trim()
-    if (tr === '') return
-    setStepsError(null)
-    setStepsBusy(true)
-    const result = await addStep(productId, { tr })
-    setStepsBusy(false)
-    if (!result.ok) {
-      setStepsError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
-    }
-    setNewStepTr('')
-    await refreshMediaAndSteps()
+    await refreshMedia()
   }
 
   if (loading) {
@@ -333,35 +218,6 @@ export function AdminProductEditPage() {
           <h2 className="text-sm font-medium">Detaylar</h2>
 
           <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Slug</span>
-            <input
-              type="text"
-              required
-              pattern="[a-z0-9-]+"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              className={inputClass}
-            />
-            <span className="block text-xs text-muted-foreground">küçük harf, rakam ve tire</span>
-          </label>
-
-          <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Seri no</span>
-            <input type="text" value={serialNo} onChange={(e) => setSerialNo(e.target.value)} className={inputClass} />
-          </label>
-
-          <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Durum</span>
-            <select value={status} onChange={(e) => setStatus(e.target.value as ProductStatus)} className={inputClass}>
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block space-y-1">
             <span className="text-sm text-muted-foreground">Malzeme</span>
             <input type="text" value={material} onChange={(e) => setMaterial(e.target.value)} className={inputClass} />
           </label>
@@ -372,13 +228,13 @@ export function AdminProductEditPage() {
           </label>
 
           <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Fiyat (₺)</span>
+            <span className="text-sm text-muted-foreground">Gram</span>
             <input
               type="number"
               min={0}
-              step={1}
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              step={0.1}
+              value={weightGrams}
+              onChange={(e) => setWeightGrams(e.target.value)}
               className={inputClass}
             />
           </label>
@@ -545,130 +401,6 @@ export function AdminProductEditPage() {
               ))}
             </div>
           )}
-        </section>
-      )}
-
-      {isEdit && (
-        <section className="max-w-2xl space-y-4 rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-medium">Süreç &amp; Hikaye</h2>
-
-          {stepsError && (
-            <p role="alert" className="text-sm text-destructive">
-              {stepsError}
-            </p>
-          )}
-
-          {steps.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Henüz adım yok.</p>
-          ) : (
-            <ol className="space-y-4">
-              {steps.map((step, index) => {
-                const draft = stepDraftTexts(step)
-                return (
-                  <li key={step.id} className="space-y-3 rounded-md border border-border p-3">
-                    <div className="flex items-start gap-2">
-                      <div className="flex flex-col gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleMoveStep(index, -1)}
-                          disabled={stepsBusy || index === 0}
-                          aria-label="Yukarı taşı"
-                          className="rounded-md border border-border px-2 py-1 text-xs outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
-                        >
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleMoveStep(index, 1)}
-                          disabled={stepsBusy || index === steps.length - 1}
-                          aria-label="Aşağı taşı"
-                          className="rounded-md border border-border px-2 py-1 text-xs outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
-                        >
-                          ▼
-                        </button>
-                      </div>
-
-                      <div className="flex-1 space-y-2">
-                        <label className="block space-y-1">
-                          <span className="text-sm text-muted-foreground">Adım (Türkçe) *</span>
-                          <input
-                            type="text"
-                            required
-                            value={draft.tr ?? ''}
-                            onChange={(e) => updateStepDraft(step.id, 'tr', e.target.value)}
-                            className={inputClass}
-                          />
-                        </label>
-
-                        <details className="text-sm">
-                          <summary className="cursor-pointer text-muted-foreground">Çeviriler</summary>
-                          <div className="mt-2 space-y-2">
-                            <label className="block space-y-1">
-                              <span className="text-xs text-muted-foreground">English</span>
-                              <input
-                                type="text"
-                                value={draft.en ?? ''}
-                                onChange={(e) => updateStepDraft(step.id, 'en', e.target.value)}
-                                className={inputClass}
-                              />
-                            </label>
-                            <label className="block space-y-1">
-                              <span className="text-xs text-muted-foreground">العربية</span>
-                              <input
-                                type="text"
-                                value={draft.ar ?? ''}
-                                onChange={(e) => updateStepDraft(step.id, 'ar', e.target.value)}
-                                className={inputClass}
-                              />
-                            </label>
-                          </div>
-                        </details>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleSaveStep(step)}
-                        disabled={stepsBusy}
-                        className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                      >
-                        Kaydet
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteStep(step.id)}
-                        disabled={stepsBusy}
-                        className="rounded-md px-3 py-1.5 text-sm font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                      >
-                        Sil
-                      </button>
-                    </div>
-                  </li>
-                )
-              })}
-            </ol>
-          )}
-
-          <form onSubmit={handleAddStep} className="flex flex-wrap items-end gap-3 border-t border-border pt-4">
-            <label className="block flex-1 space-y-1">
-              <span className="text-sm text-muted-foreground">Adım ekle (Türkçe) *</span>
-              <input
-                type="text"
-                required
-                value={newStepTr}
-                onChange={(e) => setNewStepTr(e.target.value)}
-                className={inputClass}
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={stepsBusy}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            >
-              Adım ekle
-            </button>
-          </form>
         </section>
       )}
     </div>

@@ -29,7 +29,7 @@ export interface ProductListItem {
   serialNo: string | null
   status: ProductStatus
   name: string | null
-  price: number | null
+  weightGrams: number | null
   mediaCount: number
   createdAt: number
 }
@@ -61,7 +61,7 @@ export interface ProductDetail {
   status: ProductStatus
   material: string | null
   size: string | null
-  price: number | null
+  weightGrams: number | null
   createdAt: number
   updatedAt: number
   translations: Partial<Record<Lang, ProductTranslation>>
@@ -69,13 +69,16 @@ export interface ProductDetail {
   steps: ProcessStep[]
 }
 
+/** POST /api/admin/products response: ProductDetail plus the auto-created certificate. */
+export interface ProductDetailWithCertificate extends ProductDetail {
+  certificate: { serialNo: string; qrToken: string }
+}
+
+/** Input accepted by POST/PUT /api/admin/products — no slug/serialNo/status/price. */
 export interface ProductInput {
-  slug: string
-  serialNo?: string | null
-  status: ProductStatus
   material?: string | null
   size?: string | null
-  price?: number | null
+  weightGrams?: number | null
   translations: Partial<Record<Lang, ProductTranslation>>
 }
 
@@ -157,11 +160,11 @@ export async function getProduct(
 
 export async function createProduct(
   input: ProductInput,
-): Promise<{ ok: true; data: ProductDetail } | { ok: false; error: string }> {
+): Promise<{ ok: true; data: ProductDetailWithCertificate } | { ok: false; error: string }> {
   try {
     const res = await post('/api/admin/products', input)
     if (res.ok) {
-      const data = (await res.json()) as ProductDetail
+      const data = (await res.json()) as ProductDetailWithCertificate
       return { ok: true, data }
     }
     const data = (await res.json().catch(() => ({}))) as { error?: string }
@@ -192,6 +195,38 @@ export async function deleteProduct(id: number): Promise<{ ok: true } | { ok: fa
   try {
     const res = await del(`/api/admin/products/${id}`)
     if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function publishProduct(
+  id: number,
+): Promise<{ ok: true; data: ProductDetail } | { ok: false; error: string }> {
+  try {
+    const res = await post(`/api/admin/products/${id}/publish`, {})
+    if (res.ok) {
+      const data = (await res.json()) as ProductDetail
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function unpublishProduct(
+  id: number,
+): Promise<{ ok: true; data: ProductDetail } | { ok: false; error: string }> {
+  try {
+    const res = await post(`/api/admin/products/${id}/unpublish`, {})
+    if (res.ok) {
+      const data = (await res.json()) as ProductDetail
+      return { ok: true, data }
+    }
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     return { ok: false, error: data.error ?? 'unknown' }
   } catch {
@@ -250,53 +285,6 @@ export async function patchMedia(
 export async function deleteMedia(mediaId: number): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const res = await del(`/api/admin/media/${mediaId}`)
-    if (res.ok) return { ok: true }
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
-    return { ok: false, error: data.error ?? 'unknown' }
-  } catch {
-    return { ok: false, error: 'network' }
-  }
-}
-
-export async function addStep(
-  productId: number,
-  texts: Partial<Record<Lang, string>>,
-  sort?: number,
-): Promise<{ ok: true; data: ProcessStep } | { ok: false; error: string }> {
-  try {
-    const res = await post(`/api/admin/products/${productId}/steps`, sort === undefined ? { texts } : { texts, sort })
-    if (res.ok) {
-      const data = (await res.json()) as ProcessStep
-      return { ok: true, data }
-    }
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
-    return { ok: false, error: data.error ?? 'unknown' }
-  } catch {
-    return { ok: false, error: 'network' }
-  }
-}
-
-export async function updateStep(
-  stepId: number,
-  texts: Partial<Record<Lang, string>>,
-  sort: number,
-): Promise<{ ok: true; data: ProcessStep } | { ok: false; error: string }> {
-  try {
-    const res = await put(`/api/admin/steps/${stepId}`, { texts, sort })
-    if (res.ok) {
-      const data = (await res.json()) as ProcessStep
-      return { ok: true, data }
-    }
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
-    return { ok: false, error: data.error ?? 'unknown' }
-  } catch {
-    return { ok: false, error: 'network' }
-  }
-}
-
-export async function deleteStep(stepId: number): Promise<{ ok: true } | { ok: false; error: string }> {
-  try {
-    const res = await del(`/api/admin/steps/${stepId}`)
     if (res.ok) return { ok: true }
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     return { ok: false, error: data.error ?? 'unknown' }
@@ -425,6 +413,60 @@ export async function deleteCertificate(id: number): Promise<{ ok: true } | { ok
   try {
     const res = await del(`/api/admin/certificates/${id}`)
     if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function patchCertificate(
+  id: number,
+  buyerName: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await fetch(`/api/admin/certificates/${id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ buyerName }),
+      credentials: 'same-origin',
+    })
+    if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export interface Material {
+  id: number
+  name: string
+}
+
+export async function listMaterials(): Promise<{ ok: true; data: Material[] } | { ok: false; error: string }> {
+  try {
+    const res = await fetch('/api/admin/materials', { credentials: 'same-origin' })
+    if (res.ok) {
+      const data = (await res.json()) as { materials: Material[] }
+      return { ok: true, data: data.materials }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function createMaterial(
+  name: string,
+): Promise<{ ok: true; data: Material } | { ok: false; error: string }> {
+  try {
+    const res = await post('/api/admin/materials', { name })
+    if (res.ok) {
+      const data = (await res.json()) as Material
+      return { ok: true, data }
+    }
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     return { ok: false, error: data.error ?? 'unknown' }
   } catch {

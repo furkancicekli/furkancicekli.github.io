@@ -99,7 +99,7 @@ export function AdminProductsPage() {
                   Durum
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Fiyat
+                  Gram
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
                   Medya
@@ -121,7 +121,7 @@ export function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={p.status} />
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.price !== null ? `₺${p.price}` : '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{p.weightGrams !== null ? `${p.weightGrams} g` : '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{p.mediaCount}</td>
                 </tr>
               ))}
