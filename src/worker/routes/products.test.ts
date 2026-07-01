@@ -335,6 +335,31 @@ describe('product steps routes', () => {
     expect(step.sort).toBe(5)
   })
 
+  it('appends new step after existing max sort, not by count (when sort is non-contiguous)', async () => {
+    const product = await createProduct()
+
+    // Add two steps with sort 0 and 1
+    const res1 = await addStep(product.id, { texts: { tr: 'Step 1' } })
+    expect(res1.status).toBe(201)
+    const step1 = await json<ProcessStep>(res1)
+    expect(step1.sort).toBe(0)
+
+    const res2 = await addStep(product.id, { texts: { tr: 'Step 2' } })
+    expect(res2.status).toBe(201)
+    const step2 = await json<ProcessStep>(res2)
+    expect(step2.sort).toBe(1)
+
+    // PUT step2's sort to 10, creating a gap
+    const putRes = await updateStep(step2.id, { texts: { tr: 'Step 2 updated' }, sort: 10 })
+    expect(putRes.status).toBe(200)
+
+    // POST a third step without sort — should append to max (10), not count (3)
+    const res3 = await addStep(product.id, { texts: { tr: 'Step 3' } })
+    expect(res3.status).toBe(201)
+    const step3 = await json<ProcessStep>(res3)
+    expect(step3.sort).toBe(11)
+  })
+
   it('updates a step, replacing texts entirely and changing sort', async () => {
     const product = await createProduct()
     const created = await json<ProcessStep>(await addStep(product.id, { texts: { tr: 'Döküm', en: 'Casting' } }))

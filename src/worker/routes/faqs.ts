@@ -80,7 +80,13 @@ adminFaqsRoutes.post('/', async (c) => {
   if (!validated.ok) return c.json({ error: validated.error }, 400)
 
   const store = c.get('faqStore')
-  const sort = validated.sort ?? (await store.list()).length
+  if (validated.sort !== undefined) {
+    const faq = await store.create(validated.sort, validated.translations)
+    return c.json(faq, 201)
+  }
+
+  const list = await store.list()
+  const sort = list.length === 0 ? 0 : Math.max(...list.map((f) => f.sort)) + 1
   const faq = await store.create(sort, validated.translations)
   return c.json(faq, 201)
 })

@@ -121,6 +121,29 @@ describe('admin faqs routes', () => {
     expect(body.faqs.map((f) => f.translations.tr?.question)).toEqual(['S2', 'S3', 'S1'])
   })
 
+  it('appends new faq after existing max sort, not by count (when sort is non-contiguous)', async () => {
+    // Create two faqs with sort 0 and 1
+    const res1 = await post(validInput({ translations: { tr: { question: 'Q1', answer: 'A1' } } }))
+    expect(res1.status).toBe(201)
+    const faq1 = await json<Faq>(res1)
+    expect(faq1.sort).toBe(0)
+
+    const res2 = await post(validInput({ translations: { tr: { question: 'Q2', answer: 'A2' } } }))
+    expect(res2.status).toBe(201)
+    const faq2 = await json<Faq>(res2)
+    expect(faq2.sort).toBe(1)
+
+    // PUT faq2's sort to 10, creating a gap
+    const putRes = await put(faq2.id, { translations: { tr: { question: 'Q2-updated', answer: 'A2' } }, sort: 10 })
+    expect(putRes.status).toBe(200)
+
+    // POST a third without sort — should append to max (10), not count (3)
+    const res3 = await post(validInput({ translations: { tr: { question: 'Q3', answer: 'A3' } } }))
+    expect(res3.status).toBe(201)
+    const faq3 = await json<Faq>(res3)
+    expect(faq3.sort).toBe(11)
+  })
+
   it('returns 400 for a non-numeric id', async () => {
     const res = await req('/api/admin/faqs/abc', { method: 'DELETE', headers: { cookie } })
     expect(res.status).toBe(400)

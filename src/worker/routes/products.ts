@@ -227,7 +227,12 @@ productsRoutes.post('/:id/steps', async (c) => {
   const product = await store.get(id)
   if (!product) return c.json({ error: 'not_found' }, 404)
 
-  const sort = validated.sort ?? product.steps.length
+  const sort =
+    validated.sort !== undefined
+      ? validated.sort
+      : product.steps.length === 0
+        ? 0
+        : Math.max(...product.steps.map((s) => s.sort)) + 1
   const step = await store.addStep(id, validated.texts, sort)
   return c.json(step, 201)
 })
