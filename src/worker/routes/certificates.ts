@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import type { CertStore } from '../db/certificates'
 import type { ProductStore } from '../db/products'
+import { normalizeSerial, isValidSerial } from '../lib/serial'
 
 export type AdminCertificatesEnv = {
   Bindings: Record<string, unknown>
@@ -14,6 +15,7 @@ export type PublicVerifyEnv = {
 
 export const adminCertificatesRoutes = new Hono<AdminCertificatesEnv>()
 export const publicVerifyRoutes = new Hono<PublicVerifyEnv>()
+export const publicVerifySerialRoutes = new Hono<PublicVerifyEnv>()
 
 export function newToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16))
@@ -31,7 +33,11 @@ adminCertificatesRoutes.get('/', async (c) => {
   return c.json({ certificates })
 })
 
-adminCertificatesRoutes.post('/', async (c) => {
+adminCertificatesRoutes.patch('/:id', async (c) => {
+  const idParam = c.req.param('id')
+  const id = Number(idParam)
+  if (!Number.isInteger(id)) return c.json({ error: 'invalid_request' }, 400)
+
   let body: unknown
   try {
     body = await c.req.json()
@@ -41,26 +47,15 @@ adminCertificatesRoutes.post('/', async (c) => {
   if (typeof body !== 'object' || body === null) return c.json({ error: 'invalid_request' }, 400)
   const src = body as Record<string, unknown>
 
-  if (typeof src.productId !== 'number' || !Number.isInteger(src.productId)) {
+  if (typeof src.buyerName !== 'string' && src.buyerName !== null) {
     return c.json({ error: 'invalid_request' }, 400)
   }
+  const buyerName = src.buyerName === null ? null : trimOrNull(src.buyerName)
 
-  let buyerName: string | null = null
-  if (src.buyerName !== undefined && src.buyerName !== null) {
-    if (typeof src.buyerName !== 'string') return c.json({ error: 'invalid_request' }, 400)
-    buyerName = trimOrNull(src.buyerName)
-  }
-
-  const productStore = c.get('productStore')
-  const product = await productStore.get(src.productId)
-  if (!product) return c.json({ error: 'not_found' }, 404)
-  if (product.status !== 'sold') return c.json({ error: 'product_not_sold' }, 400)
-  if (!product.serialNo) return c.json({ error: 'invalid_request' }, 400)
-
-  const certStore = c.get('certStore')
-  const qrToken = newToken()
-  const certificate = await certStore.create(product.id, product.serialNo, qrToken, buyerName)
-  return c.json(certificate, 201)
+  const store = c.get('certStore')
+  const updated = await store.updateBuyer(id, buyerName)
+  if (!updated) return c.json({ error: 'not_found' }, 404)
+  return c.json({ ok: true })
 })
 
 adminCertificatesRoutes.delete('/:id', async (c) => {
@@ -84,6 +79,33 @@ publicVerifyRoutes.get('/:token', async (c) => {
     valid: true,
     certificate: {
       serialNo: cert.serialNo,
+      qrToken: cert.qrToken,
+      buyerName: cert.buyerName,
+      issuedAt: cert.issuedAt,
+      product: {
+        name: cert.productName ?? null,
+        slug: cert.productSlug ?? null,
+        material: cert.material,
+        size: cert.size,
+      },
+    },
+  })
+})
+
+publicVerifySerialRoutes.get('/:serial', async (c) => {
+  const serialParam = c.req.param('serial')
+  const normalized = normalizeSerial(serialParam)
+  if (!isValidSerial(normalized)) return c.json({ valid: false }, 404)
+
+  const store = c.get('certStore')
+  const cert = await store.findBySerial(normalized)
+  if (!cert) return c.json({ valid: false }, 404)
+
+  return c.json({
+    valid: true,
+    certificate: {
+      serialNo: cert.serialNo,
+      qrToken: cert.qrToken,
       buyerName: cert.buyerName,
       issuedAt: cert.issuedAt,
       product: {

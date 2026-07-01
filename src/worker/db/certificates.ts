@@ -14,6 +14,10 @@ export interface CertStore {
   create(productId: number, serialNo: string, qrToken: string, buyerName: string | null): Promise<Certificate>
   delete(id: number): Promise<boolean>
   findByToken(token: string): Promise<(Certificate & { material: string | null; size: string | null }) | null>
+  /** Looks up a certificate by an already-normalized 16-digit serial. Callers must normalize input first. */
+  findBySerial(serial: string): Promise<(Certificate & { material: string | null; size: string | null }) | null>
+  /** Updates the buyer name for a certificate. Returns false if the certificate id doesn't exist. */
+  updateBuyer(id: number, buyerName: string | null): Promise<boolean>
 }
 
 export function d1CertStore(db: D1Database): CertStore {
@@ -126,6 +130,50 @@ export function d1CertStore(db: D1Database): CertStore {
         material: row.material,
         size: row.size,
       }
+    },
+
+    async findBySerial(serial) {
+      const row = await db
+        .prepare(
+          `SELECT c.id AS id, c.product_id AS product_id, c.serial_no AS serial_no, c.qr_token AS qr_token,
+                  c.buyer_name AS buyer_name, c.issued_at AS issued_at,
+                  t.name AS product_name, p.slug AS product_slug, p.material AS material, p.size AS size
+           FROM certificates c
+           LEFT JOIN products p ON p.id = c.product_id
+           LEFT JOIN product_translations t ON t.product_id = c.product_id AND t.lang = 'tr'
+           WHERE c.serial_no = ?`,
+        )
+        .bind(serial)
+        .first<{
+          id: number
+          product_id: number
+          serial_no: string
+          qr_token: string
+          buyer_name: string | null
+          issued_at: number
+          product_name: string | null
+          product_slug: string | null
+          material: string | null
+          size: string | null
+        }>()
+      if (!row) return null
+      return {
+        id: row.id,
+        productId: row.product_id,
+        serialNo: row.serial_no,
+        qrToken: row.qr_token,
+        buyerName: row.buyer_name,
+        issuedAt: row.issued_at,
+        productName: row.product_name,
+        productSlug: row.product_slug,
+        material: row.material,
+        size: row.size,
+      }
+    },
+
+    async updateBuyer(id, buyerName) {
+      const res = await db.prepare('UPDATE certificates SET buyer_name = ? WHERE id = ?').bind(buyerName, id).run()
+      return res.meta.changes > 0
     },
   }
 }

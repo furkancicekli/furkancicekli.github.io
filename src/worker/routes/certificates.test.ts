@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { Hono } from 'hono'
-import { adminCertificatesRoutes, publicVerifyRoutes, type AdminCertificatesEnv, type PublicVerifyEnv } from './certificates'
+import { adminCertificatesRoutes, publicVerifyRoutes, publicVerifySerialRoutes, type AdminCertificatesEnv, type PublicVerifyEnv } from './certificates'
 import { requireAuth } from '../middleware/require-auth'
 import type { AuthEnv } from './auth'
 import type { Certificate } from '../db/certificates'
@@ -56,9 +56,9 @@ describe('admin certificates routes', () => {
     return app.request(path, init)
   }
 
-  function post(body: unknown, withAuth = true) {
-    return req('/api/admin/certificates', {
-      method: 'POST',
+  function patch(id: number, body: unknown, withAuth = true) {
+    return req(`/api/admin/certificates/${id}`, {
+      method: 'PATCH',
       headers: { 'content-type': 'application/json', ...(withAuth ? { cookie } : {}) },
       body: JSON.stringify(body),
     })
@@ -69,86 +69,12 @@ describe('admin certificates routes', () => {
     expect(res.status).toBe(401)
   })
 
-  it('blocks unauthenticated access to create', async () => {
-    const res = await post({ productId: 1 }, false)
-    expect(res.status).toBe(401)
-  })
-
-  it('creates a certificate for a sold product with serial, returns 201 with copied serialNo', async () => {
-    const product = await productStore.create(soldProductInput())
-
-    const res = await post({ productId: product.id, buyerName: 'Ayşe' })
-    expect(res.status).toBe(201)
-    const body = await json<Certificate>(res)
-    expect(body.serialNo).toBe('SN-001')
-    expect(body.buyerName).toBe('Ayşe')
-    expect(body.qrToken).toBeTypeOf('string')
-    expect(body.qrToken.length).toBeGreaterThan(0)
-  })
-
-  it('generates two distinct unique tokens for two certificates', async () => {
-    const product = await productStore.create(soldProductInput())
-
-    const res1 = await post({ productId: product.id })
-    const res2 = await post({ productId: product.id })
-    const body1 = await json<Certificate>(res1)
-    const body2 = await json<Certificate>(res2)
-
-    expect(body1.qrToken).not.toBe(body2.qrToken)
-  })
-
-  it('rejects creating a certificate for a product that is not sold with product_not_sold', async () => {
-    const product = await productStore.create(soldProductInput({ status: 'published' }))
-
-    const res = await post({ productId: product.id })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'product_not_sold' })
-  })
-
-  it('rejects creating a certificate for a sold product with no serialNo with invalid_request', async () => {
-    const product = await productStore.create(soldProductInput({ serialNo: null }))
-
-    const res = await post({ productId: product.id })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('rejects creating a certificate for a sold product with empty serialNo with invalid_request', async () => {
-    const product = await productStore.create(soldProductInput({ serialNo: '' }))
-
-    const res = await post({ productId: product.id })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('returns 404 not_found for a missing productId', async () => {
-    const res = await post({ productId: 999 })
-    expect(res.status).toBe(404)
-    expect(await res.json()).toEqual({ error: 'not_found' })
-  })
-
-  it('rejects a non-integer productId with invalid_request', async () => {
-    const res = await post({ productId: 'abc' })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
-  it('rejects a non-object JSON body with invalid_request', async () => {
-    const res = await req('/api/admin/certificates', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', cookie },
-      body: 'null',
-    })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_request' })
-  })
-
   it('lists certificates with joined productName/productSlug, ordered issuedAt DESC', async () => {
     const product1 = await productStore.create(soldProductInput({ slug: 'urun-1', translations: { tr: { name: 'Ürün 1', description: null, story: null } } }))
     const product2 = await productStore.create(soldProductInput({ slug: 'urun-2', serialNo: 'SN-002', translations: { tr: { name: 'Ürün 2', description: null, story: null } } }))
 
-    await post({ productId: product1.id })
-    await post({ productId: product2.id })
+    await certStore.create(product1.id, product1.serialNo as string, 'tok-1', null)
+    await certStore.create(product2.id, product2.serialNo as string, 'tok-2', null)
 
     const res = await req('/api/admin/certificates', { headers: { cookie } })
     expect(res.status).toBe(200)
@@ -164,10 +90,8 @@ describe('admin certificates routes', () => {
   it('orders certificates by issuedAt DESC, then id DESC for same-second creates', async () => {
     const product = await productStore.create(soldProductInput())
 
-    const res1 = await post({ productId: product.id })
-    const cert1 = await json<Certificate>(res1)
-    const res2 = await post({ productId: product.id })
-    const cert2 = await json<Certificate>(res2)
+    const cert1 = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
+    const cert2 = await certStore.create(product.id, product.serialNo as string, 'tok-2', null)
 
     const listRes = await req('/api/admin/certificates', { headers: { cookie } })
     expect(listRes.status).toBe(200)
@@ -180,7 +104,7 @@ describe('admin certificates routes', () => {
 
   it('deletes a certificate; second delete returns 404', async () => {
     const product = await productStore.create(soldProductInput())
-    const created = await json<Certificate>(await post({ productId: product.id }))
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
 
     const delRes = await req(`/api/admin/certificates/${created.id}`, { method: 'DELETE', headers: { cookie } })
     expect(delRes.status).toBe(200)
@@ -189,6 +113,85 @@ describe('admin certificates routes', () => {
     const delRes2 = await req(`/api/admin/certificates/${created.id}`, { method: 'DELETE', headers: { cookie } })
     expect(delRes2.status).toBe(404)
     expect(await delRes2.json()).toEqual({ error: 'not_found' })
+  })
+
+  it('updates buyerName on happy path and persists in the store', async () => {
+    const product = await productStore.create(soldProductInput())
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
+
+    const res = await patch(created.id, { buyerName: 'Ayşe' })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true })
+
+    const updated = certStore.certificates.find((c) => c.id === created.id)
+    expect(updated?.buyerName).toBe('Ayşe')
+  })
+
+  it('trims surrounding whitespace from buyerName before storing', async () => {
+    const product = await productStore.create(soldProductInput())
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
+
+    const res = await patch(created.id, { buyerName: '  Mehmet  ' })
+    expect(res.status).toBe(200)
+
+    const updated = certStore.certificates.find((c) => c.id === created.id)
+    expect(updated?.buyerName).toBe('Mehmet')
+  })
+
+  it('stores null when buyerName is an empty or all-whitespace string', async () => {
+    const product = await productStore.create(soldProductInput())
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', 'Old Name')
+
+    const res = await patch(created.id, { buyerName: '   ' })
+    expect(res.status).toBe(200)
+
+    const updated = certStore.certificates.find((c) => c.id === created.id)
+    expect(updated?.buyerName).toBeNull()
+  })
+
+  it('rejects a wrong-type buyerName (number) with invalid_request', async () => {
+    const product = await productStore.create(soldProductInput())
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
+
+    const res = await patch(created.id, { buyerName: 42 })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  })
+
+  it('rejects a wrong-type buyerName (array) with invalid_request', async () => {
+    const product = await productStore.create(soldProductInput())
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
+
+    const res = await patch(created.id, { buyerName: ['Ayşe'] })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  })
+
+  it('rejects a non-object body with invalid_request', async () => {
+    const product = await productStore.create(soldProductInput())
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
+
+    const res = await req(`/api/admin/certificates/${created.id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json', cookie },
+      body: 'null',
+    })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'invalid_request' })
+  })
+
+  it('returns 404 when patching a nonexistent certificate id', async () => {
+    const res = await patch(999, { buyerName: 'Ayşe' })
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({ error: 'not_found' })
+  })
+
+  it('blocks unauthenticated access to PATCH', async () => {
+    const product = await productStore.create(soldProductInput())
+    const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
+
+    const res = await patch(created.id, { buyerName: 'Ayşe' }, false)
+    expect(res.status).toBe(401)
   })
 })
 
@@ -216,12 +219,19 @@ describe('public verify route', () => {
     expect(res.status).toBe(200)
     const body = await json<{
       valid: boolean
-      certificate: { serialNo: string; buyerName: string | null; issuedAt: number; product: { name: string | null; slug: string | null; material: string | null; size: string | null } }
+      certificate: {
+        serialNo: string
+        buyerName: string | null
+        issuedAt: number
+        qrToken: string
+        product: { name: string | null; slug: string | null; material: string | null; size: string | null }
+      }
     }>(res)
     expect(body.valid).toBe(true)
     expect(body.certificate.serialNo).toBe('SN-001')
     expect(body.certificate.buyerName).toBe('Mehmet')
     expect(body.certificate.issuedAt).toBeTypeOf('number')
+    expect(body.certificate.qrToken).toBe('tok-abc')
     expect(body.certificate.product).toEqual({
       name: 'Ürün 1',
       slug: 'urun-1',
@@ -238,6 +248,58 @@ describe('public verify route', () => {
 
   it('never returns 401, even without any auth cookie', async () => {
     const res = await app.request('/api/verify/anything')
+    expect(res.status).not.toBe(401)
+  })
+})
+
+describe('public verify-serial route', () => {
+  let certStore: ReturnType<typeof fakeCertStore>
+  let productStore: ReturnType<typeof fakeProductStore>
+  let app: Hono<PublicVerifyEnv>
+
+  // 16-digit serial, valid per lib/serial.ts (year 2026 + random digits + Luhn check digit)
+  const VALID_SERIAL = '2026000000000006'
+
+  beforeEach(() => {
+    productStore = fakeProductStore()
+    certStore = fakeCertStore(productStore)
+    app = new Hono<PublicVerifyEnv>()
+    app.use('*', async (c, next) => {
+      c.set('certStore', certStore)
+      await next()
+    })
+    app.route('/api/verify-serial', publicVerifySerialRoutes)
+  })
+
+  it('returns valid:true with qrToken for a known serial, accepting spaced/formatted input', async () => {
+    const product = await productStore.create(soldProductInput())
+    const cert = await certStore.create(product.id, VALID_SERIAL, 'tok-xyz', 'Mehmet')
+
+    const spaced = VALID_SERIAL.match(/.{1,4}/g)!.join(' ')
+    const res = await app.request(`/api/verify-serial/${encodeURIComponent(spaced)}`)
+    expect(res.status).toBe(200)
+    const body = await json<{
+      valid: boolean
+      certificate: { serialNo: string; qrToken: string }
+    }>(res)
+    expect(body.valid).toBe(true)
+    expect(body.certificate.qrToken).toBe(cert.qrToken)
+  })
+
+  it('returns 404 valid:false for a serial that fails isValidSerial (wrong length)', async () => {
+    const res = await app.request('/api/verify-serial/12345')
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({ valid: false })
+  })
+
+  it('returns 404 valid:false for a valid-format but unknown serial', async () => {
+    const res = await app.request(`/api/verify-serial/${VALID_SERIAL}`)
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({ valid: false })
+  })
+
+  it('works without any auth header, confirming it is public', async () => {
+    const res = await app.request(`/api/verify-serial/${VALID_SERIAL}`)
     expect(res.status).not.toBe(401)
   })
 })

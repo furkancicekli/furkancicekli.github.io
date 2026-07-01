@@ -53,5 +53,21 @@ export function fakeCertStore(productStore: ReturnType<typeof fakeProductStore>)
         size: product?.size ?? null,
       }
     },
+    async findBySerial(serial: string) {
+      const cert = certificates.find((c) => c.serialNo === serial)
+      if (!cert) return null
+      const product = productStore.products.find((p) => p.id === cert.productId)
+      return {
+        ...withProductFields(cert),
+        material: product?.material ?? null,
+        size: product?.size ?? null,
+      }
+    },
+    async updateBuyer(id: number, buyerName: string | null): Promise<boolean> {
+      const cert = certificates.find((c) => c.id === id)
+      if (!cert) return false
+      cert.buyerName = buyerName
+      return true
+    },
   }
 }

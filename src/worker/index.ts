@@ -14,7 +14,7 @@ import { adminRoutes } from './routes/admin'
 import { productsRoutes } from './routes/products'
 import { mediaRoutes, publicMediaRoutes } from './routes/media'
 import { adminFaqsRoutes, publicFaqsRoutes } from './routes/faqs'
-import { adminCertificatesRoutes, publicVerifyRoutes } from './routes/certificates'
+import { adminCertificatesRoutes, publicVerifyRoutes, publicVerifySerialRoutes } from './routes/certificates'
 import { adminMaterialsRoutes } from './routes/materials'
 import { requireAuth } from './middleware/require-auth'
 
@@ -68,6 +68,10 @@ app.use('/api/verify/*', async (c, next) => {
   c.set('certStore', d1CertStore(c.env.DB))
   await next()
 })
+app.use('/api/verify-serial/*', async (c, next) => {
+  c.set('certStore', d1CertStore(c.env.DB))
+  await next()
+})
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin/products', productsRoutes)
 app.route('/api/admin', mediaRoutes)
@@ -77,5 +81,6 @@ app.route('/api/admin/materials', adminMaterialsRoutes)
 app.route('/api/media', publicMediaRoutes)
 app.route('/api/faqs', publicFaqsRoutes)
 app.route('/api/verify', publicVerifyRoutes)
+app.route('/api/verify-serial', publicVerifySerialRoutes)
 
 export default app
