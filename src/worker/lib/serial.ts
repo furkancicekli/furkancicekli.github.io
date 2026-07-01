@@ -1,4 +1,3 @@
-const SERIAL_LENGTH = 16
 const RANDOM_DIGITS = 11
 
 /** Computes the Luhn check digit for a string of digits (without the check digit). */
