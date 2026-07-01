@@ -18,6 +18,8 @@ authRoutes.post('/login', async (c) => {
   } catch {
     return c.json({ error: 'invalid_request' }, 400)
   }
+  // JSON `null`/primitif gövdede property erişimi patlamasın — 400 dön
+  if (typeof body !== 'object' || body === null) return c.json({ error: 'invalid_request' }, 400)
   if (typeof body.email !== 'string' || typeof body.password !== 'string' || !body.email.trim() || !body.password) {
     return c.json({ error: 'invalid_request' }, 400)
   }

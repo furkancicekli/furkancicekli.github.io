@@ -38,6 +38,15 @@ describe('auth routes', () => {
     expect(res.status).toBe(400)
   })
 
+  it('rejects a non-object JSON body (null) with 400', async () => {
+    const res = await app.request(
+      '/api/auth/login',
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: 'null' },
+      ENV,
+    )
+    expect(res.status).toBe(400)
+  })
+
   it('bootstraps first admin from env credentials and sets session cookie', async () => {
     const res = await login(app, { email: 'Admin@Example.com ', password: 'boot-pass-123' })
     expect(res.status).toBe(200)
