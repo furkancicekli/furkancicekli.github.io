@@ -328,4 +328,26 @@ describe('products routes', () => {
     const body = await json<ProductDetail>(res)
     expect(body.steps).toEqual([])
   })
+
+  it('rolls back product when certificate creation fails', async () => {
+    // Override certStore.create to throw
+    const failingCertStore = { ...certStore, create: () => { throw new Error('certificate_boom') } }
+
+    app = new Hono<CombinedEnv>()
+    app.use('*', async (c, next) => {
+      c.set('store', authStore)
+      c.set('productStore', productStore)
+      c.set('certStore', failingCertStore)
+      await next()
+    })
+    app.use('/api/admin/products/*', requireAuth)
+    app.route('/api/admin/products', productsRoutes)
+
+    const res = await post(validInput())
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'certificate_failed' })
+
+    // Verify product was rolled back (not in store)
+    expect(productStore.products).toHaveLength(0)
+  })
 })
