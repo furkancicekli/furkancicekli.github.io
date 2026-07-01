@@ -6,6 +6,7 @@ import { login } from './api'
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: 'E-posta veya şifre hatalı.',
   invalid_request: 'E-posta ve şifre gerekli.',
+  network: 'Bağlantı hatası. Tekrar deneyin.',
   unknown: 'Bir hata oluştu. Tekrar deneyin.',
 }
 
