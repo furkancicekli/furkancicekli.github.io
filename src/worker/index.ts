@@ -7,12 +7,15 @@ import { d1FaqStore } from './db/faqs'
 import type { FaqStore } from './db/faqs'
 import { d1CertStore } from './db/certificates'
 import type { CertStore } from './db/certificates'
+import { d1MaterialStore } from './db/materials'
+import type { MaterialStore } from './db/materials'
 import { authRoutes } from './routes/auth'
 import { adminRoutes } from './routes/admin'
 import { productsRoutes, productStepsRoutes } from './routes/products'
 import { mediaRoutes, publicMediaRoutes } from './routes/media'
 import { adminFaqsRoutes, publicFaqsRoutes } from './routes/faqs'
 import { adminCertificatesRoutes, publicVerifyRoutes } from './routes/certificates'
+import { adminMaterialsRoutes } from './routes/materials'
 import { requireAuth } from './middleware/require-auth'
 
 export type Bindings = {
@@ -30,6 +33,7 @@ type Env = {
     productStore: ProductStore
     faqStore: FaqStore
     certStore: CertStore
+    materialStore: MaterialStore
     user?: { id: number; email: string }
   }
 }
@@ -52,6 +56,7 @@ app.use('/api/admin/*', async (c, next) => {
   c.set('productStore', d1ProductStore(c.env.DB))
   c.set('faqStore', d1FaqStore(c.env.DB))
   c.set('certStore', d1CertStore(c.env.DB))
+  c.set('materialStore', d1MaterialStore(c.env.DB))
   await next()
 })
 app.use('/api/admin/*', requireAuth)
@@ -69,6 +74,7 @@ app.route('/api/admin', mediaRoutes)
 app.route('/api/admin/steps', productStepsRoutes)
 app.route('/api/admin/faqs', adminFaqsRoutes)
 app.route('/api/admin/certificates', adminCertificatesRoutes)
+app.route('/api/admin/materials', adminMaterialsRoutes)
 app.route('/api/media', publicMediaRoutes)
 app.route('/api/faqs', publicFaqsRoutes)
 app.route('/api/verify', publicVerifyRoutes)
