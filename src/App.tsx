@@ -9,6 +9,8 @@ import {
   AdminDashboardPage,
   AdminSettingsPage,
   AdminComingSoonPage,
+  AdminProductsPage,
+  AdminProductEditPage,
   contentSections,
 } from '@/pages/admin'
 import { LoadingScreen } from '@/components/ui'
@@ -53,14 +55,20 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
-            {/* Faz 3/5'te açılacak içerik bölümleri — şimdilik "yakında" sayfaları */}
-            {contentSections.map((s) => (
-              <Route
-                key={s.path}
-                path={s.path.replace('/admin/', '')}
-                element={<AdminComingSoonPage section={s} />}
-              />
-            ))}
+            <Route path="products" element={<AdminProductsPage />} />
+            <Route path="products/new" element={<AdminProductEditPage />} />
+            <Route path="products/:id" element={<AdminProductEditPage />} />
+            {/* Henüz açılmamış içerik bölümleri — "yakında" sayfaları. Bir bölüm
+                açıldığında sections.ts'te ready:true yapılır ve buradan düşer. */}
+            {contentSections
+              .filter((s) => !s.ready)
+              .map((s) => (
+                <Route
+                  key={s.path}
+                  path={s.path.replace('/admin/', '')}
+                  element={<AdminComingSoonPage section={s} />}
+                />
+              ))}
           </Route>
         </Routes>
       </BrowserRouter>

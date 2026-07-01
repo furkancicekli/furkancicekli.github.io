@@ -28,7 +28,7 @@ export const contentSections: AdminSection[] = [
     label: 'Ürünler',
     description: 'Ürün ekleme, fotoğraf ve video yönetimi.',
     icon: Package,
-    ready: false,
+    ready: true,
   },
   {
     path: '/admin/process',
