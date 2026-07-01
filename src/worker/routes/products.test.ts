@@ -6,6 +6,7 @@ import type { AuthEnv } from './auth'
 import type { ProductDetail } from '../db/products'
 import { fakeAuthStore } from '../test/fake-auth-store'
 import { fakeProductStore } from '../test/fake-product-store'
+import { fakeR2Bucket } from '../test/fake-r2-bucket'
 
 async function json<T = unknown>(res: Response): Promise<T> {
   return (await res.json()) as T
@@ -25,12 +26,14 @@ function validInput(overrides: Record<string, unknown> = {}) {
 describe('products routes', () => {
   let productStore: ReturnType<typeof fakeProductStore>
   let authStore: ReturnType<typeof fakeAuthStore>
+  let r2Bucket: ReturnType<typeof fakeR2Bucket>
   let app: Hono<CombinedEnv>
   const cookie = 'sid=test-session'
 
   beforeEach(async () => {
     productStore = fakeProductStore()
     authStore = fakeAuthStore()
+    r2Bucket = fakeR2Bucket()
     const user = await authStore.createUser('admin@example.com', 'hash')
     await authStore.createSession('test-session', user.id, Math.floor(Date.now() / 1000) + 3600)
 
@@ -44,8 +47,12 @@ describe('products routes', () => {
     app.route('/api/admin/products', productsRoutes)
   })
 
+  function req(path: string, init: RequestInit = {}) {
+    return app.request(path, init, { MEDIA: r2Bucket as unknown as R2Bucket })
+  }
+
   function post(body: unknown) {
-    return app.request('/api/admin/products', {
+    return req('/api/admin/products', {
       method: 'POST',
       headers: { 'content-type': 'application/json', cookie },
       body: JSON.stringify(body),
@@ -53,7 +60,7 @@ describe('products routes', () => {
   }
 
   function put(id: number | string, body: unknown) {
-    return app.request(`/api/admin/products/${id}`, {
+    return req(`/api/admin/products/${id}`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json', cookie },
       body: JSON.stringify(body),
@@ -61,7 +68,7 @@ describe('products routes', () => {
   }
 
   it('blocks unauthenticated access', async () => {
-    const res = await app.request('/api/admin/products')
+    const res = await req('/api/admin/products')
     expect(res.status).toBe(401)
   })
 
@@ -128,7 +135,7 @@ describe('products routes', () => {
   })
 
   it('rejects a non-object JSON body', async () => {
-    const res = await app.request('/api/admin/products', {
+    const res = await req('/api/admin/products', {
       method: 'POST',
       headers: { 'content-type': 'application/json', cookie },
       body: 'null',
@@ -142,7 +149,7 @@ describe('products routes', () => {
     productStore.media.push({ id: 1, productId: created.id, type: 'image', r2Key: 'k1', kind: 'gallery', sort: 0 })
     productStore.media.push({ id: 2, productId: created.id, type: 'image', r2Key: 'k2', kind: 'gallery', sort: 1 })
 
-    const res = await app.request('/api/admin/products', { headers: { cookie } })
+    const res = await req('/api/admin/products', { headers: { cookie } })
     expect(res.status).toBe(200)
     const body = await json<{ products: unknown[] }>(res)
     expect(body.products).toHaveLength(1)
@@ -150,13 +157,13 @@ describe('products routes', () => {
   })
 
   it('returns 404 for a missing product', async () => {
-    const res = await app.request('/api/admin/products/999', { headers: { cookie } })
+    const res = await req('/api/admin/products/999', { headers: { cookie } })
     expect(res.status).toBe(404)
     expect(await res.json()).toEqual({ error: 'not_found' })
   })
 
   it('returns 400 for a non-numeric id', async () => {
-    const res = await app.request('/api/admin/products/abc', { headers: { cookie } })
+    const res = await req('/api/admin/products/abc', { headers: { cookie } })
     expect(res.status).toBe(400)
     expect(await res.json()).toEqual({ error: 'invalid_request' })
   })
@@ -189,16 +196,43 @@ describe('products routes', () => {
 
   it('deletes a product; subsequent GET is 404', async () => {
     const created = await json<ProductDetail>(await post(validInput({ slug: 'ring-01' })))
-    const delRes = await app.request(`/api/admin/products/${created.id}`, { method: 'DELETE', headers: { cookie } })
+    const delRes = await req(`/api/admin/products/${created.id}`, { method: 'DELETE', headers: { cookie } })
     expect(delRes.status).toBe(200)
     expect(await delRes.json()).toEqual({ ok: true })
 
-    const getRes = await app.request(`/api/admin/products/${created.id}`, { headers: { cookie } })
+    const getRes = await req(`/api/admin/products/${created.id}`, { headers: { cookie } })
     expect(getRes.status).toBe(404)
   })
 
   it('returns 404 when deleting a missing product', async () => {
-    const res = await app.request('/api/admin/products/999', { method: 'DELETE', headers: { cookie } })
+    const res = await req('/api/admin/products/999', { method: 'DELETE', headers: { cookie } })
     expect(res.status).toBe(404)
+  })
+
+  it('deletes product even when R2 delete fails', async () => {
+    // Create a product with media
+    const created = await json<ProductDetail>(await post(validInput({ slug: 'ring-01' })))
+    productStore.media.push({ id: 1, productId: created.id, type: 'image', r2Key: 'k1', kind: 'gallery', sort: 0 })
+
+    // Make R2 delete throw an error
+    const throwingBucket = {
+      ...r2Bucket,
+      async delete() {
+        throw new Error('R2 transient error')
+      },
+    }
+
+    // DELETE should still succeed and product should be gone
+    const delRes = await app.request(
+      `/api/admin/products/${created.id}`,
+      { method: 'DELETE', headers: { cookie } },
+      { MEDIA: throwingBucket as unknown as R2Bucket }
+    )
+    expect(delRes.status).toBe(200)
+    expect(await delRes.json()).toEqual({ ok: true })
+
+    // Verify product is deleted from store
+    const getRes = await req(`/api/admin/products/${created.id}`, { headers: { cookie } })
+    expect(getRes.status).toBe(404)
   })
 })

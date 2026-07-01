@@ -164,7 +164,13 @@ productsRoutes.delete('/:id', async (c) => {
   if (!existing) return c.json({ error: 'not_found' }, 404)
 
   const r2Keys = existing.media.map((m) => m.r2Key)
-  if (r2Keys.length > 0) await c.env.MEDIA.delete(r2Keys)
+  if (r2Keys.length > 0) {
+    try {
+      await c.env.MEDIA.delete(r2Keys)
+    } catch {
+      // R2 silme hatası ürün silmeyi engellemesin — yetim nesne kabul edilebilir
+    }
+  }
 
   const deleted = await store.delete(id)
   if (!deleted) return c.json({ error: 'not_found' }, 404)
