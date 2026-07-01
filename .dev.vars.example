@@ -1,0 +1,4 @@
+# Lokal geliştirme için kopyala: cp .dev.vars.example .dev.vars
+# İlk girişte admin_users boşsa bu kimlikle admin kullanıcısı otomatik oluşturulur (bootstrap).
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-me-locally

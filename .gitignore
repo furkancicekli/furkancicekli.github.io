@@ -25,6 +25,9 @@ playwright-report/
 test-results/
 /playwright/.cache/
 
+# Local environment variables (for Cloudflare Workers)
+.dev.vars
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
