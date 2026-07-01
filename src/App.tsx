@@ -12,6 +12,7 @@ import {
   AdminProductsPage,
   AdminProductEditPage,
   AdminProcessPage,
+  AdminFaqPage,
   contentSections,
 } from '@/pages/admin'
 import { LoadingScreen } from '@/components/ui'
@@ -60,6 +61,7 @@ function App() {
             <Route path="products/new" element={<AdminProductEditPage />} />
             <Route path="products/:id" element={<AdminProductEditPage />} />
             <Route path="process" element={<AdminProcessPage />} />
+            <Route path="faq" element={<AdminFaqPage />} />
             {/* Henüz açılmamış içerik bölümleri — "yakında" sayfaları. Bir bölüm
                 açıldığında sections.ts'te ready:true yapılır ve buradan düşer. */}
             {contentSections

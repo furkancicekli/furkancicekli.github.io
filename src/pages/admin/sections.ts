@@ -42,7 +42,7 @@ export const contentSections: AdminSection[] = [
     label: 'SSS',
     description: 'Sıkça sorulan soruların yönetimi.',
     icon: MessageCircleQuestion,
-    ready: false,
+    ready: true,
   },
   {
     path: '/admin/certificates',

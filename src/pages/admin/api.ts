@@ -304,3 +304,75 @@ export async function deleteStep(stepId: number): Promise<{ ok: true } | { ok: f
     return { ok: false, error: 'network' }
   }
 }
+
+export interface FaqTranslation {
+  question: string
+  answer: string
+}
+
+export interface Faq {
+  id: number
+  sort: number
+  translations: Partial<Record<Lang, FaqTranslation>>
+}
+
+export interface FaqInput {
+  translations: Partial<Record<Lang, FaqTranslation>>
+  sort?: number
+}
+
+export async function listFaqs(): Promise<{ ok: true; data: Faq[] } | { ok: false; error: string }> {
+  try {
+    const res = await fetch('/api/admin/faqs', { credentials: 'same-origin' })
+    if (res.ok) {
+      const data = (await res.json()) as { faqs: Faq[] }
+      return { ok: true, data: data.faqs }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function createFaq(input: FaqInput): Promise<{ ok: true; data: Faq } | { ok: false; error: string }> {
+  try {
+    const res = await post('/api/admin/faqs', input)
+    if (res.ok) {
+      const data = (await res.json()) as Faq
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function updateFaq(
+  id: number,
+  input: FaqInput,
+): Promise<{ ok: true; data: Faq } | { ok: false; error: string }> {
+  try {
+    const res = await put(`/api/admin/faqs/${id}`, input)
+    if (res.ok) {
+      const data = (await res.json()) as Faq
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function deleteFaq(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await del(`/api/admin/faqs/${id}`)
+    if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
