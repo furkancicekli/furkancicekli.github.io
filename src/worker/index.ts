@@ -1,8 +1,11 @@
 import { Hono } from 'hono'
 import { d1AuthStore } from './db/auth'
 import type { AuthStore } from './db/auth'
+import { d1ProductStore } from './db/products'
+import type { ProductStore } from './db/products'
 import { authRoutes } from './routes/auth'
 import { adminRoutes } from './routes/admin'
+import { productsRoutes } from './routes/products'
 import { requireAuth } from './middleware/require-auth'
 
 export type Bindings = {
@@ -13,7 +16,10 @@ export type Bindings = {
   ADMIN_PASSWORD?: string
 }
 
-type Env = { Bindings: Bindings; Variables: { store: AuthStore; user?: { id: number; email: string } } }
+type Env = {
+  Bindings: Bindings
+  Variables: { store: AuthStore; productStore: ProductStore; user?: { id: number; email: string } }
+}
 
 const app = new Hono<Env>()
 
@@ -29,6 +35,11 @@ app.use('/api/admin/*', async (c, next) => {
 })
 app.route('/api/auth', authRoutes)
 app.use('/api/admin/*', requireAuth)
+app.use('/api/admin/products/*', async (c, next) => {
+  c.set('productStore', d1ProductStore(c.env.DB))
+  await next()
+})
 app.route('/api/admin', adminRoutes)
+app.route('/api/admin/products', productsRoutes)
 
 export default app
