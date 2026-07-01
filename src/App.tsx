@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { Layout } from '@/components/layout'
 import { HomePage, GalleryPage } from '@/pages'
+import { AdminLoginPage, AdminLayout, AdminDashboardPage } from '@/pages/admin'
 import { LoadingScreen } from '@/components/ui'
 import '@/i18n'
 
+// Public sayfalar mevcut site kabuğu (nav + footer) içinde render edilir
+function PublicShell() {
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  )
+}
+
 function App() {
-  const [visible, setVisible] = useState(true)
+  // Admin rotalarında intro animasyonu gösterilmez — panel doğrudan açılır
+  const isAdminRoute = window.location.pathname.startsWith('/admin')
+  const [visible, setVisible] = useState(!isAdminRoute)
 
   useEffect(() => {
     // Remove the inline #app-loader after React's first commit so the React
@@ -25,12 +37,16 @@ function App() {
 
       {/* Router mounts immediately underneath — content is ready when overlay fades */}
       <BrowserRouter>
-        <Layout>
-          <Routes>
+        <Routes>
+          <Route element={<PublicShell />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/gallery" element={<GalleryPage />} />
-          </Routes>
-        </Layout>
+          </Route>
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboardPage />} />
+          </Route>
+        </Routes>
       </BrowserRouter>
     </>
   )
