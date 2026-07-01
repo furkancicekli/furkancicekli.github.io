@@ -276,16 +276,18 @@ export function AdminProductEditPage() {
     const neighbor = steps[neighborIndex]
     setStepsError(null)
     setStepsBusy(true)
-    const [res1, res2] = await Promise.all([
-      updateStep(current.id, current.texts, neighbor.sort),
-      updateStep(neighbor.id, neighbor.texts, current.sort),
-    ])
-    setStepsBusy(false)
-    if (!res1.ok || !res2.ok) {
-      setStepsError(ERROR_MESSAGES.unknown)
-      return
+    try {
+      const [res1, res2] = await Promise.all([
+        updateStep(current.id, current.texts, neighbor.sort),
+        updateStep(neighbor.id, neighbor.texts, current.sort),
+      ])
+      if (!res1.ok || !res2.ok) {
+        setStepsError(ERROR_MESSAGES.unknown)
+      }
+    } finally {
+      setStepsBusy(false)
+      await refreshMediaAndSteps()
     }
-    await refreshMediaAndSteps()
   }
 
   async function handleAddStep(e: FormEvent) {
