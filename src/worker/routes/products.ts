@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import type { ProductInput, ProductStatus, ProductStore, ProductTranslation, Lang } from '../db/products'
 
 export type ProductsEnv = {
-  Bindings: { DB: D1Database }
+  Bindings: { DB: D1Database; MEDIA: R2Bucket }
   Variables: { productStore: ProductStore; user?: { id: number; email: string } }
 }
 
@@ -160,6 +160,12 @@ productsRoutes.delete('/:id', async (c) => {
   if (!Number.isInteger(id)) return c.json({ error: 'invalid_request' }, 400)
 
   const store = c.get('productStore')
+  const existing = await store.get(id)
+  if (!existing) return c.json({ error: 'not_found' }, 404)
+
+  const r2Keys = existing.media.map((m) => m.r2Key)
+  if (r2Keys.length > 0) await c.env.MEDIA.delete(r2Keys)
+
   const deleted = await store.delete(id)
   if (!deleted) return c.json({ error: 'not_found' }, 404)
   return c.json({ ok: true })

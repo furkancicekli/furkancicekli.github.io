@@ -6,6 +6,7 @@ import type { ProductStore } from './db/products'
 import { authRoutes } from './routes/auth'
 import { adminRoutes } from './routes/admin'
 import { productsRoutes } from './routes/products'
+import { mediaRoutes, publicMediaRoutes } from './routes/media'
 import { requireAuth } from './middleware/require-auth'
 
 export type Bindings = {
@@ -39,7 +40,13 @@ app.use('/api/admin/products/*', async (c, next) => {
   c.set('productStore', d1ProductStore(c.env.DB))
   await next()
 })
+app.use('/api/admin/media/*', async (c, next) => {
+  c.set('productStore', d1ProductStore(c.env.DB))
+  await next()
+})
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin/products', productsRoutes)
+app.route('/api/admin', mediaRoutes)
+app.route('/api/media', publicMediaRoutes)
 
 export default app
