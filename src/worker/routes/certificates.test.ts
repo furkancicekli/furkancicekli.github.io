@@ -162,6 +162,23 @@ describe('admin certificates routes', () => {
     expect(body.certificates[1].productSlug).toBe('urun-1')
   })
 
+  it('orders certificates by issuedAt DESC, then id DESC for same-second creates', async () => {
+    const product = await productStore.create(soldProductInput())
+
+    const res1 = await post({ productId: product.id })
+    const cert1 = await json<Certificate>(res1)
+    const res2 = await post({ productId: product.id })
+    const cert2 = await json<Certificate>(res2)
+
+    const listRes = await req('/api/admin/certificates', { headers: { cookie } })
+    expect(listRes.status).toBe(200)
+    const body = await json<{ certificates: Certificate[] }>(listRes)
+    expect(body.certificates).toHaveLength(2)
+    // Both have same issuedAt (same epoch second), so id DESC tiebreak applies
+    expect(body.certificates[0].id).toBe(cert2.id)
+    expect(body.certificates[1].id).toBe(cert1.id)
+  })
+
   it('deletes a certificate; second delete returns 404', async () => {
     const product = await productStore.create(soldProductInput())
     const created = await json<Certificate>(await post({ productId: product.id }))

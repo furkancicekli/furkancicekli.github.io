@@ -27,7 +27,7 @@ export function d1CertStore(db: D1Database): CertStore {
            FROM certificates c
            LEFT JOIN products p ON p.id = c.product_id
            LEFT JOIN product_translations t ON t.product_id = c.product_id AND t.lang = 'tr'
-           ORDER BY c.issued_at DESC`,
+           ORDER BY c.issued_at DESC, c.id DESC`,
         )
         .all<{
           id: number

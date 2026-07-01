@@ -18,7 +18,11 @@ export function fakeCertStore(productStore: ReturnType<typeof fakeProductStore>)
     certificates,
     async list(): Promise<Certificate[]> {
       return [...certificates]
-        .sort((a, b) => b.issuedAt - a.issuedAt)
+        .sort((a, b) => {
+          const issuedAtDiff = b.issuedAt - a.issuedAt
+          if (issuedAtDiff !== 0) return issuedAtDiff
+          return b.id - a.id // tiebreaker for same-second issuedAt
+        })
         .map(withProductFields)
     },
     async create(productId: number, serialNo: string, qrToken: string, buyerName: string | null): Promise<Certificate> {
@@ -28,7 +32,7 @@ export function fakeCertStore(productStore: ReturnType<typeof fakeProductStore>)
         serialNo,
         qrToken,
         buyerName,
-        issuedAt: Math.floor(Date.now() / 1000) + certificates.length, // monotonic for ordering in tests
+        issuedAt: Math.floor(Date.now() / 1000),
       }
       certificates.push(cert)
       return withProductFields(cert)
