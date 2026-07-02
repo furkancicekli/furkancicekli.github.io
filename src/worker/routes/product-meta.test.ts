@@ -1,7 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { Hono } from 'hono'
 import { productMetaRoutes, type ProductMetaEnv, escapeHtmlAttr } from './product-meta'
 import { fakeProductStore } from '../test/fake-product-store'
+
+// src/worker/routes/product-meta.test.ts -> repo root index.html is three
+// levels up. `@cloudflare/workers-types` (loaded for the worker tsconfig
+// program) declares its own ambient `URL` global that isn't structurally
+// identical to Node's `url.URL`, so the pathname is read off the URL
+// instance directly rather than passing it through `fileURLToPath`.
+const REAL_INDEX_HTML_PATH = new URL('../../../index.html', import.meta.url).pathname
+const REAL_INDEX_HTML = readFileSync(REAL_INDEX_HTML_PATH, 'utf-8')
 
 const HEAD_HTML = `<!doctype html>
 <html lang="tr">
@@ -172,5 +181,64 @@ describe('escapeHtmlAttr', () => {
 
   it('leaves plain text unchanged', () => {
     expect(escapeHtmlAttr('Kuka Tesbih')).toBe('Kuka Tesbih')
+  })
+})
+
+describe('product-meta route against the real index.html', () => {
+  let productStore: ReturnType<typeof fakeProductStore>
+  let app: Hono<ProductMetaEnv>
+
+  beforeEach(() => {
+    productStore = fakeProductStore()
+    app = new Hono<ProductMetaEnv>()
+    app.use('*', async (c, next) => {
+      c.set('productStore', productStore)
+      await next()
+    })
+    app.route('/', productMetaRoutes)
+  })
+
+  it('rewrites every social/meta tag in the real repo-root index.html for a published product', async () => {
+    await productStore.create(
+      validInput({
+        slug: 'kuka-tesbih',
+        translations: {
+          tr: {
+            name: 'Kuka Tesbih',
+            description: 'Elle işlenmiş kuka tesbih, doğal malzeme ve özenli işçilikle üretildi.',
+            story: 'Hikaye',
+          },
+        },
+      }),
+    )
+    await productStore.addMedia(1, { type: 'image', r2Key: 'products/kuka-tesbih/cover.jpg', kind: 'gallery', sort: 0 })
+
+    const res = await app.request('/products/kuka-tesbih', {}, { ASSETS: fakeAssets(REAL_INDEX_HTML) })
+    expect(res.status).toBe(200)
+    const text = await res.text()
+
+    // The rewrite must actually touch the file - guards against future
+    // index.html edits (e.g. changed tag markers) silently breaking the
+    // string-replace matching and turning the rewrite into a no-op.
+    expect(text).not.toBe(REAL_INDEX_HTML)
+
+    expect(text).toContain('<meta property="og:title" content="Kuka Tesbih" />')
+    expect(text).toContain('<title>Kuka Tesbih | Furkan Çiçekli | Tesbih Ustası</title>')
+
+    const defaultTitle = 'Furkan Çiçekli | Tesbih Ustası'
+    const defaultDescription = 'El yapımı tesbihlerin ustası; geleneksel zanaatı modern tasarımla birleştiriyor.'
+    const defaultImage = 'https://furkancicekli.com/og-default.jpg'
+    const defaultUrl = 'https://furkancicekli.com/'
+
+    expect(text).not.toContain(`<title>${defaultTitle}</title>`)
+    expect(text).not.toContain(`<meta property="og:title" content="${defaultTitle}" />`)
+    expect(text).not.toContain(`<meta property="twitter:title" content="${defaultTitle}" />`)
+    expect(text).not.toContain(`<meta name="description" content="${defaultDescription}" />`)
+    expect(text).not.toContain(`<meta property="og:description" content="${defaultDescription}" />`)
+    expect(text).not.toContain(`<meta property="twitter:description" content="${defaultDescription}" />`)
+    expect(text).not.toContain(`<meta property="og:image" content="${defaultImage}" />`)
+    expect(text).not.toContain(`<meta property="twitter:image" content="${defaultImage}" />`)
+    expect(text).not.toContain(`<meta property="og:url" content="${defaultUrl}" />`)
+    expect(text).not.toContain(`<meta property="twitter:url" content="${defaultUrl}" />`)
   })
 })

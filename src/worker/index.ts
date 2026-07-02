@@ -110,6 +110,12 @@ app.route('/api/products', publicProductsRoutes)
 app.route('/api/verify', publicVerifyRoutes)
 app.route('/api/verify-serial', publicVerifySerialRoutes)
 app.route('/', sitemapRoutes)
+// Explicit passthrough for the bare listing page: Cloudflare's run_worker_first
+// glob for `/products/*` may also route requests with no trailing slug to the
+// worker, and productMetaRoutes only defines `/products/:slug`. Without this,
+// a matched-but-unhandled `/products` request would fall through to a 404
+// instead of serving the SPA shell.
+app.get('/products', (c) => c.env.ASSETS.fetch(c.req.raw))
 app.route('/', productMetaRoutes)
 
 export default app

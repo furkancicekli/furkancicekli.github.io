@@ -11,6 +11,7 @@ export const productMetaRoutes = new Hono<ProductMetaEnv>()
 const SITE_ORIGIN = 'https://furkancicekli.com'
 const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/og-default.jpg`
 const DESCRIPTION_MAX_LENGTH = 200
+const DEFAULT_DESCRIPTION = 'El yapımı tesbihlerin ustası; geleneksel zanaatı modern tasarımla birleştiriyor.'
 
 /** Escapes text for safe interpolation into an HTML attribute value or text
  * node. Product names/descriptions are admin-authored free text and may
@@ -71,7 +72,8 @@ productMetaRoutes.get('/products/:slug', async (c) => {
   }
 
   const name = product.translations.tr?.name || product.translations.en?.name || slug
-  const rawDescription = product.translations.tr?.description || product.translations.en?.description || ''
+  const rawDescription =
+    product.translations.tr?.description || product.translations.en?.description || DEFAULT_DESCRIPTION
   const description = truncateDescription(rawDescription)
   const cover = firstGalleryCover(product.media)
   const coverUrl = cover ? `${SITE_ORIGIN}/api/media/${cover}` : DEFAULT_OG_IMAGE
