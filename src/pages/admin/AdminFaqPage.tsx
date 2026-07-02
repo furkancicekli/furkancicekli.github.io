@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { createFaq, deleteFaq, listFaqs, updateFaq } from './api'
+import { useConfirm } from './ConfirmDialog'
 import type { Faq, FaqTranslation, Lang } from './api'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -63,6 +64,7 @@ function FaqCard({ faq, index, count, busy, onMove, onSave, onDelete }: FaqCardP
   const [drafts, setDrafts] = useState<Record<Lang, FaqTranslation>>(() => draftFromFaq(faq))
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
   const [saving, setSaving] = useState(false)
+  const { confirm, confirmDialog } = useConfirm()
 
   function updateDraft(lang: Lang, field: keyof FaqTranslation, value: string) {
     setDrafts((prev) => ({ ...prev, [lang]: { ...prev[lang], [field]: value } }))
@@ -87,7 +89,7 @@ function FaqCard({ faq, index, count, busy, onMove, onSave, onDelete }: FaqCardP
   }
 
   async function handleDelete() {
-    if (!window.confirm('Bu soru silinecek. Emin misin?')) return
+    if (!(await confirm({ title: 'Soruyu sil', message: 'Bu soru silinecek. Emin misin?' }))) return
     setMessage(null)
     setSaving(true)
     try {
@@ -104,6 +106,7 @@ function FaqCard({ faq, index, count, busy, onMove, onSave, onDelete }: FaqCardP
 
   return (
     <li className="space-y-3 rounded-md border border-border p-3">
+      {confirmDialog}
       <div className="flex items-start gap-2">
         <div className="flex flex-col gap-1">
           <button

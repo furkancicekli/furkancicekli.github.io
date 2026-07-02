@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Copy } from 'lucide-react'
 import QRCode from 'qrcode'
 import { deleteCertificate, listCertificates, patchCertificate } from './api'
+import { useConfirm } from './ConfirmDialog'
 import type { Certificate } from './api'
 import { formatSerial } from './serial-format'
 
@@ -27,6 +28,7 @@ interface CertificateCardProps {
 function CertificateCard({ certificate, onDelete, onSaveBuyerName }: CertificateCardProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const { confirm, confirmDialog } = useConfirm()
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [buyerNameInput, setBuyerNameInput] = useState(certificate.buyerName ?? '')
@@ -48,7 +50,7 @@ function CertificateCard({ certificate, onDelete, onSaveBuyerName }: Certificate
   }, [certificate.qrToken])
 
   async function handleDelete() {
-    if (!window.confirm('Bu sertifika silinecek. Emin misin?')) return
+    if (!(await confirm({ title: 'Sertifikayı sil', message: 'Bu sertifika silinecek. Emin misin?' }))) return
     setError(null)
     setDeleting(true)
     try {
@@ -86,6 +88,7 @@ function CertificateCard({ certificate, onDelete, onSaveBuyerName }: Certificate
 
   return (
     <li className="flex flex-col gap-4 rounded-md border border-border p-4 sm:flex-row sm:items-center">
+      {confirmDialog}
       <div className="flex shrink-0 items-center justify-center">
         {qrDataUrl ? (
           <img src={qrDataUrl} alt="Doğrulama QR kodu" className="h-24 w-24 rounded-md border border-border" />

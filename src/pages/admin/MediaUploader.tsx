@@ -3,6 +3,7 @@ import { Upload, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { deleteMedia, getProduct, uploadProductMedia } from './api'
 import type { ProductMediaItem } from './api'
+import { useConfirm } from './ConfirmDialog'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4']
 const MAX_BYTES = 15 * 1024 * 1024
@@ -36,6 +37,7 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
   const [errors, setErrors] = useState<string[]>([])
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { confirm, confirmDialog } = useConfirm()
 
   useEffect(() => {
     let cancelled = false
@@ -83,7 +85,7 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
   }
 
   async function handleDelete(mediaId: number) {
-    if (!window.confirm('Bu fotoğraf silinecek. Emin misin?')) return
+    if (!(await confirm({ message: 'Bu fotoğraf silinecek. Emin misin?' }))) return
     const result = await deleteMedia(mediaId)
     if (!result.ok) {
       setErrors(['Silinemedi. Tekrar deneyin.'])
@@ -94,6 +96,7 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
 
   return (
     <div className="space-y-4">
+      {confirmDialog}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}

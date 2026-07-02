@@ -11,6 +11,7 @@ import {
   updateProduct,
 } from './api'
 import type { Lang, ProductDetail, ProductStatus, ProductTranslation } from './api'
+import { useConfirm } from './ConfirmDialog'
 import { MaterialSelect } from './MaterialSelect'
 import { MediaUploader } from './MediaUploader'
 import { formatSerial } from './serial-format'
@@ -103,6 +104,7 @@ export function AdminProductEditPage() {
 
   const [publishBusy, setPublishBusy] = useState(false)
   const [publishMessage, setPublishMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
+  const { confirm, confirmDialog } = useConfirm()
 
   function applyProduct(p: ProductDetail) {
     setProduct(p)
@@ -194,7 +196,13 @@ export function AdminProductEditPage() {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Bu ürün, medyası ve sertifikası silinecek. Emin misin?')) return
+    if (
+      !(await confirm({
+        title: 'Ürünü sil',
+        message: 'Bu ürün, medyası ve sertifikası silinecek. Emin misin?',
+      }))
+    )
+      return
     setBusy(true)
     const result = await deleteProduct(productId)
     setBusy(false)
@@ -248,6 +256,7 @@ export function AdminProductEditPage() {
 
   return (
     <div className="space-y-10">
+      {confirmDialog}
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
