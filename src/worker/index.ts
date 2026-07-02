@@ -9,6 +9,8 @@ import { d1CertStore } from './db/certificates'
 import type { CertStore } from './db/certificates'
 import { d1MaterialStore } from './db/materials'
 import type { MaterialStore } from './db/materials'
+import { d1GalleryStore } from './db/gallery'
+import type { GalleryStore } from './db/gallery'
 import { authRoutes } from './routes/auth'
 import { adminRoutes } from './routes/admin'
 import { productsRoutes } from './routes/products'
@@ -16,6 +18,7 @@ import { mediaRoutes, publicMediaRoutes } from './routes/media'
 import { adminFaqsRoutes, publicFaqsRoutes } from './routes/faqs'
 import { adminCertificatesRoutes, publicVerifyRoutes, publicVerifySerialRoutes } from './routes/certificates'
 import { adminMaterialsRoutes } from './routes/materials'
+import { adminGalleryRoutes, publicGalleryRoutes } from './routes/gallery'
 import { requireAuth } from './middleware/require-auth'
 
 export type Bindings = {
@@ -34,6 +37,7 @@ type Env = {
     faqStore: FaqStore
     certStore: CertStore
     materialStore: MaterialStore
+    galleryStore: GalleryStore
     user?: { id: number; email: string }
   }
 }
@@ -57,11 +61,16 @@ app.use('/api/admin/*', async (c, next) => {
   c.set('faqStore', d1FaqStore(c.env.DB))
   c.set('certStore', d1CertStore(c.env.DB))
   c.set('materialStore', d1MaterialStore(c.env.DB))
+  c.set('galleryStore', d1GalleryStore(c.env.DB))
   await next()
 })
 app.use('/api/admin/*', requireAuth)
 app.use('/api/faqs/*', async (c, next) => {
   c.set('faqStore', d1FaqStore(c.env.DB))
+  await next()
+})
+app.use('/api/gallery/*', async (c, next) => {
+  c.set('galleryStore', d1GalleryStore(c.env.DB))
   await next()
 })
 app.use('/api/verify/*', async (c, next) => {
@@ -78,8 +87,10 @@ app.route('/api/admin', mediaRoutes)
 app.route('/api/admin/faqs', adminFaqsRoutes)
 app.route('/api/admin/certificates', adminCertificatesRoutes)
 app.route('/api/admin/materials', adminMaterialsRoutes)
+app.route('/api/admin/gallery', adminGalleryRoutes)
 app.route('/api/media', publicMediaRoutes)
 app.route('/api/faqs', publicFaqsRoutes)
+app.route('/api/gallery', publicGalleryRoutes)
 app.route('/api/verify', publicVerifyRoutes)
 app.route('/api/verify-serial', publicVerifySerialRoutes)
 
