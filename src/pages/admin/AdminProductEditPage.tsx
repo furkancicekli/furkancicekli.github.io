@@ -1,19 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Copy } from 'lucide-react'
 import {
-  deleteMedia,
   deleteProduct,
   getProduct,
   listCertificates,
   publishProduct,
   unpublishProduct,
   updateProduct,
-  uploadProductMedia,
 } from './api'
-import type { Lang, ProductDetail, ProductMediaItem, ProductStatus, ProductTranslation } from './api'
+import type { Lang, ProductDetail, ProductStatus, ProductTranslation } from './api'
 import { MaterialSelect } from './MaterialSelect'
+import { MediaUploader } from './MediaUploader'
 import { formatSerial } from './serial-format'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -61,105 +60,16 @@ interface MediaSectionProps {
   productId: number
   kind: 'gallery' | 'process'
   title: string
-  media: ProductMediaItem[]
-  onChanged: () => void
+  /** Gösterilecek türler (process bölümü legacy raw_material'ı da içerir). */
+  filterKinds: string[]
 }
 
-/** Fotoğraf/video yükleme + grid bölümü — "Ürün Fotoğrafları" (gallery) ve
- * "Yapım Aşamaları" (process) bölümleri bu bileşeni sabit bir kind ile kullanır.
- * `media` filtrelemesi çağıran tarafta yapılır (process bölümü ayrıca legacy
- * raw_material kayıtlarını da içerir). */
-function MediaSection({ productId, kind, title, media, onChanged }: MediaSectionProps) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  async function handleUpload(e: FormEvent) {
-    e.preventDefault()
-    const file = fileInputRef.current?.files?.[0]
-    if (!file) return
-    setError(null)
-    setBusy(true)
-    const result = await uploadProductMedia(productId, file, kind)
-    setBusy(false)
-    if (!result.ok) {
-      setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
-    }
-    if (fileInputRef.current) fileInputRef.current.value = ''
-    onChanged()
-  }
-
-  async function handleDelete(mediaId: number) {
-    if (!window.confirm('Bu medya silinecek. Emin misin?')) return
-    setError(null)
-    setBusy(true)
-    const result = await deleteMedia(mediaId)
-    setBusy(false)
-    if (!result.ok) {
-      setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
-    }
-    onChanged()
-  }
-
+/** Medya bölümü — yükleme/silme/grid işleri ortak MediaUploader bileşeninde. */
+function MediaSection({ productId, kind, title, filterKinds }: MediaSectionProps) {
   return (
     <section className="max-w-2xl space-y-4 rounded-lg border border-border bg-card p-4">
       <h2 className="text-sm font-medium">{title}</h2>
-
-      <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-3">
-        <label className="block space-y-1">
-          <span className="text-sm text-muted-foreground">Dosya</span>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,video/mp4"
-            className="block text-sm"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-        >
-          {busy ? 'Yükleniyor…' : 'Yükle'}
-        </button>
-      </form>
-
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-
-      {media.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Henüz medya yok.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {media.map((m) => (
-            <div key={m.id} className="space-y-2 rounded-md border border-border p-2">
-              {m.type === 'image' ? (
-                <img
-                  src={`/api/media/${m.r2Key}`}
-                  loading="lazy"
-                  alt=""
-                  className="aspect-square w-full rounded-sm object-cover"
-                />
-              ) : (
-                <video src={`/api/media/${m.r2Key}`} muted className="aspect-square w-full rounded-sm object-cover" />
-              )}
-              <button
-                type="button"
-                onClick={() => handleDelete(m.id)}
-                disabled={busy}
-                className="w-full rounded-md px-2 py-1 text-xs font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-              >
-                Sil
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <MediaUploader productId={productId} uploadKind={kind} filterKinds={filterKinds} />
     </section>
   )
 }
@@ -244,13 +154,6 @@ export function AdminProductEditPage() {
       cancelled = true
     }
   }, [productId])
-
-  async function refreshProduct() {
-    const result = await getProduct(productId)
-    if (result.ok) {
-      applyProduct(result.data)
-    }
-  }
 
   function updateTranslation(lang: Lang, field: keyof ProductTranslation, value: string) {
     setTranslations((prev) => ({ ...prev, [lang]: { ...prev[lang], [field]: value === '' ? null : value } }))
@@ -342,8 +245,6 @@ export function AdminProductEditPage() {
     )
   }
 
-  const galleryMedia = product.media.filter((m) => m.kind === 'gallery')
-  const processMedia = product.media.filter((m) => m.kind === 'process' || m.kind === 'raw_material')
 
   return (
     <div className="space-y-10">
@@ -528,19 +429,12 @@ export function AdminProductEditPage() {
 
       <div className="space-y-6">
         <h2 className="font-serif text-lg font-bold">Medya</h2>
-        <MediaSection
-          productId={productId}
-          kind="gallery"
-          title="Ürün Fotoğrafları"
-          media={galleryMedia}
-          onChanged={refreshProduct}
-        />
+        <MediaSection productId={productId} kind="gallery" title="Ürün Fotoğrafları" filterKinds={['gallery']} />
         <MediaSection
           productId={productId}
           kind="process"
           title="Yapım Aşamaları"
-          media={processMedia}
-          onChanged={refreshProduct}
+          filterKinds={['process', 'raw_material']}
         />
       </div>
     </div>

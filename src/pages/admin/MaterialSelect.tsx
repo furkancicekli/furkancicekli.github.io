@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
 import { createMaterial, listMaterials } from './api'
 import type { Material } from './api'
 
@@ -61,8 +60,7 @@ export function MaterialSelect({ value, onChange }: MaterialSelectProps) {
     onChange(raw === '' ? null : raw)
   }
 
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault()
+  async function handleCreate() {
     const name = newName.trim()
     if (name === '') return
     setError(null)
@@ -109,8 +107,11 @@ export function MaterialSelect({ value, onChange }: MaterialSelectProps) {
         </p>
       )}
 
+      {/* DİKKAT: aşağıda <form> KULLANILMAZ — bu bileşen üst formların (wizard
+          adım 1, edit sayfası) içinde render edilir; iç içe form HTML'de
+          geçersizdir ve "Ekle" butonu dış formu submit eder. */}
       {creating && (
-        <form onSubmit={handleCreate} className="flex items-end gap-2">
+        <div className="flex items-end gap-2">
           <label className="block flex-1 space-y-1">
             <span className="text-sm text-muted-foreground">Yeni malzeme adı</span>
             <input
@@ -118,11 +119,18 @@ export function MaterialSelect({ value, onChange }: MaterialSelectProps) {
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault() // Enter dış formu göndermesin — malzemeyi ekle
+                  void handleCreate()
+                }
+              }}
               className={inputClass}
             />
           </label>
           <button
-            type="submit"
+            type="button"
+            onClick={() => void handleCreate()}
             disabled={busy || newName.trim() === ''}
             className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
           >
@@ -136,7 +144,7 @@ export function MaterialSelect({ value, onChange }: MaterialSelectProps) {
           >
             Vazgeç
           </button>
-        </form>
+        </div>
       )}
 
       {error && (

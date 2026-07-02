@@ -1,20 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import QRCode from 'qrcode'
 import {
   createProduct,
-  deleteMedia,
-  getProduct,
   listCertificates,
   patchCertificate,
   publishProduct,
   updateProduct,
-  uploadProductMedia,
 } from './api'
-import type { ProductMediaItem } from './api'
 import { MaterialSelect } from './MaterialSelect'
+import { MediaUploader } from './MediaUploader'
 import { formatSerial } from './serial-format'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -81,124 +78,14 @@ interface MediaStepProps {
   onNext: () => void
 }
 
-/** Fotoğraf/video yükleme adımı — hem "Ürün Fotoğrafları" hem "Yapım Aşamaları"
- * adımları bu bileşeni sabit bir kind ile kullanır. */
+/** Fotoğraf yükleme adımı — "Ürün Fotoğrafları" ve "Yapım Aşamaları" adımları
+ * bu bileşeni sabit bir kind ile kullanır; yükleme işi MediaUploader'da. */
 function MediaStep({ productId, kind, helperText, onBack, onNext }: MediaStepProps) {
-  const [media, setMedia] = useState<ProductMediaItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    getProduct(productId).then((result) => {
-      if (cancelled) return
-      if (result.ok) {
-        setMedia(result.data.media.filter((m) => m.kind === kind))
-      }
-      setLoading(false)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [productId, kind])
-
-  async function refresh() {
-    const result = await getProduct(productId)
-    if (result.ok) {
-      setMedia(result.data.media.filter((m) => m.kind === kind))
-    }
-  }
-
-  async function handleUpload(e: FormEvent) {
-    e.preventDefault()
-    const file = fileInputRef.current?.files?.[0]
-    if (!file) return
-    setError(null)
-    setBusy(true)
-    const result = await uploadProductMedia(productId, file, kind)
-    setBusy(false)
-    if (!result.ok) {
-      setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
-    }
-    if (fileInputRef.current) fileInputRef.current.value = ''
-    await refresh()
-  }
-
-  async function handleDelete(mediaId: number) {
-    if (!window.confirm('Bu medya silinecek. Emin misin?')) return
-    setError(null)
-    setBusy(true)
-    const result = await deleteMedia(mediaId)
-    setBusy(false)
-    if (!result.ok) {
-      setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
-    }
-    await refresh()
-  }
-
   return (
     <section className="max-w-2xl space-y-4 rounded-lg border border-border bg-card p-4">
       <p className="text-sm text-muted-foreground">{helperText}</p>
 
-      <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-3">
-        <label className="block space-y-1">
-          <span className="text-sm text-muted-foreground">Dosya</span>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,video/mp4"
-            className="block text-sm"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-        >
-          {busy ? 'Yükleniyor…' : 'Yükle'}
-        </button>
-      </form>
-
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Yükleniyor…</p>
-      ) : media.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Henüz medya yok.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {media.map((m) => (
-            <div key={m.id} className="space-y-2 rounded-md border border-border p-2">
-              {m.type === 'image' ? (
-                <img
-                  src={`/api/media/${m.r2Key}`}
-                  loading="lazy"
-                  alt=""
-                  className="aspect-square w-full rounded-sm object-cover"
-                />
-              ) : (
-                <video src={`/api/media/${m.r2Key}`} muted className="aspect-square w-full rounded-sm object-cover" />
-              )}
-              <button
-                type="button"
-                onClick={() => handleDelete(m.id)}
-                disabled={busy}
-                className="w-full rounded-md px-2 py-1 text-xs font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-              >
-                Sil
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <MediaUploader productId={productId} uploadKind={kind} filterKinds={[kind]} />
 
       <div className="flex items-center gap-3 border-t border-border pt-4">
         <button
