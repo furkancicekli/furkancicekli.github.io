@@ -29,8 +29,13 @@ import type { Page } from '@playwright/test'
  *   3. Yapım Aşamaları   — MediaUploader dropzone (optional); "Devam" advances
  *                        straight to step 4 (no separate confirmation step).
  *   4. Sertifika & Yayın — shows the generated 16-digit serial + QR pointing at
- *                        /verify/:qrToken; "Yayınla" publishes and returns to
- *                        /admin/products.
+ *                        /verify/:qrToken, plus a "Sitede yayınla" checkbox
+ *                        (checked by default) and a single "Bitir" button.
+ *                        With the checkbox checked, "Bitir" calls
+ *                        publishProduct and returns to /admin/products with
+ *                        the product shown as "Yayında"; unchecking it would
+ *                        leave the product as a draft instead (not exercised
+ *                        by this suite).
  *
  * There are no native browser dialogs anywhere in the admin app anymore —
  * destructive actions go through an in-app ConfirmDialog (role="alertdialog").
@@ -154,7 +159,13 @@ test.describe('admin content management flows', () => {
 
     await expect(page.getByRole('img', { name: 'Doğrulama QR kodu' })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Yayınla' }).click()
+    // "Sitede yayınla" checkbox is checked by default; finishing with it
+    // checked publishes the product (single "Bitir" button now replaces the
+    // old separate Yayınla/Taslak-olarak-bitir buttons).
+    const publishCheckbox = page.getByRole('checkbox', { name: 'Sitede yayınla' })
+    await expect(publishCheckbox).toBeChecked()
+
+    await page.getByRole('button', { name: 'Bitir' }).click()
 
     await expect(page).toHaveURL(/\/admin\/products$/)
     const productRow = page.locator('tr', { has: page.getByRole('link', { name: PRODUCT_NAME }) })
@@ -180,19 +191,30 @@ test.describe('admin content management flows', () => {
   })
 
   test('public /verify query page: valid serial, invalid format, unknown serial', async ({ page }) => {
+    // VerifyQueryPage's input auto-formats as you type (formatSerialInput in
+    // src/pages/VerifyQueryPage.tsx): strips non-digits, caps at 16 digits,
+    // and inserts a dash after every group of 4 (e.g. "1234-5678-...").
+    // Its placeholder is therefore dash-separated, not space-separated.
+    const productSerialDigitsOnly = productSerialFormatted.replace(/\s/g, '')
+    const productSerialDashFormatted = productSerialDigitsOnly.replace(/(\d{4})(?=\d)/g, '$1-')
+
     await page.goto('/verify')
 
-    // 1) Valid, known serial (with spaces, as displayed) navigates to /verify/:token.
-    const input = page.getByPlaceholder('0000 0000 0000 0000')
-    await input.fill(productSerialFormatted)
+    // 1) Valid, known serial — fill with digits only (as a user would type);
+    // the field auto-formats with dashes, and submission still works since
+    // the server normalizes.
+    const input = page.getByPlaceholder('0000-0000-0000-0000')
+    await input.fill(productSerialDigitsOnly)
+    await expect(input).toHaveValue(productSerialDashFormatted)
     await page.getByRole('button', { name: 'Sorgula' }).click()
     await expect(page).toHaveURL(/\/verify\/.+/)
     await expect(page.getByRole('heading', { name: 'Orijinallik Sertifikası' })).toBeVisible()
 
     // 2) Syntactically invalid number — inline format error, no navigation.
     await page.goto('/verify')
-    const input2 = page.getByPlaceholder('0000 0000 0000 0000')
+    const input2 = page.getByPlaceholder('0000-0000-0000-0000')
     await input2.fill('1234')
+    await expect(input2).toHaveValue('1234')
     await page.getByRole('button', { name: 'Sorgula' }).click()
     await expect(page.getByRole('alert')).toHaveText('Numara hatalı görünüyor — kontrol et.')
     await expect(page).toHaveURL(/\/verify$/)
@@ -201,9 +223,11 @@ test.describe('admin content management flows', () => {
     // server reports not found.
     const unknownSerial = makeUnknownValidSerial()
     expect(unknownSerial).toMatch(/^\d{16}$/)
+    const unknownSerialDashFormatted = unknownSerial.replace(/(\d{4})(?=\d)/g, '$1-')
     await page.goto('/verify')
-    const input3 = page.getByPlaceholder('0000 0000 0000 0000')
+    const input3 = page.getByPlaceholder('0000-0000-0000-0000')
     await input3.fill(unknownSerial)
+    await expect(input3).toHaveValue(unknownSerialDashFormatted)
     await page.getByRole('button', { name: 'Sorgula' }).click()
     await expect(page.getByRole('alert')).toHaveText('Sertifika bulunamadı.')
     await expect(page).toHaveURL(/\/verify$/)

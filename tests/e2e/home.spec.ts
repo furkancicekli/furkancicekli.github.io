@@ -15,7 +15,22 @@ import { test, expect } from '@playwright/test'
  *   is ample for a dev-server load.
  *
  * i18n note: the default locale is Turkish (tr). All aria-labels and text
- * assertions use Turkish values unless stated otherwise.
+ * assertions use Turkish values unless stated otherwise (see
+ * src/i18n/locales/tr.json).
+ *
+ * Current HomePage composition (src/pages/HomePage.tsx): Hero +
+ * FeaturedProducts + GalleryPreview + Contact. The old Stats/CraftStack/About
+ * sections and the AI Canvas InteractiveCardStack no longer exist anywhere in
+ * src/ (grep-verified) — there is nothing left to assert about them.
+ *
+ * FeaturedProducts renders null when the API returns zero products
+ * (src/components/sections/FeaturedProducts.tsx), which is the case for a
+ * clean local D1. We only assert that resilient "renders nothing, doesn't
+ * crash" behavior here. The "a published product shows up in
+ * FeaturedProducts" case is covered once, end-to-end, in
+ * tests/e2e/public-content.spec.ts (after publishing a product via the admin
+ * wizard) — asserting it again here would mean running the wizard twice for
+ * no extra coverage.
  */
 
 // ---------------------------------------------------------------------------
@@ -35,6 +50,12 @@ async function waitForLoaderGone(page: Parameters<typeof test>[1] extends (...ar
     { timeout: 10_000 },
   )
 }
+
+// Exact Turkish nav labels, read from src/i18n/locales/tr.json "nav" block,
+// in the same order as src/content/config.ts navItems (home/products/
+// gallery/faq/contact/verify — note "about" exists in the locale file but is
+// NOT in navItems, so it must not appear as a nav link).
+const EXPECTED_NAV_LABELS = ['Ana Sayfa', 'Ürünler', 'Galeri', 'SSS', 'İletişim', 'Sertifika Sorgula']
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -151,23 +172,82 @@ test.describe('Home page smoke tests', () => {
   })
 
   // --------------------------------------------------------------------------
-  // 5. Interactive card stack (AI Canvas) renders and is interactive
+  // 5. Nav has exactly the 6 expected links, in order (desktop nav)
   // --------------------------------------------------------------------------
-  test('craft card stack renders and its controls are clickable', async ({ page }) => {
+  test('desktop nav has exactly the 6 expected links with correct Turkish labels', async ({ page }) => {
     await page.goto('/')
     await waitForLoaderGone(page)
 
-    // The AI Canvas InteractiveCardStack exposes role="group" with this label.
-    const stack = page.getByRole('group', { name: 'Interactive card stack' })
-    await stack.scrollIntoViewIfNeeded()
-    await expect(stack).toBeVisible()
+    // Header.tsx renders a <nav> (role="navigation") wrapping the desktop
+    // links; Footer.tsx also renders the same navItems inside <footer>
+    // (role="contentinfo"), so we must scope to the nav landmark or these
+    // role queries resolve to 2 elements (strict-mode violation).
+    const nav = page.getByRole('navigation')
+    for (const label of EXPECTED_NAV_LABELS) {
+      await expect(nav.getByRole('link', { name: label, exact: true })).toBeVisible()
+    }
 
-    // Dot indicators + back cards are buttons labelled "Show card N".
-    const controls = page.getByRole('button', { name: /Show card/i })
-    expect(await controls.count()).toBeGreaterThan(0)
+    // No unexpected extra nav items — e.g. "Biyografi" (about) exists in the
+    // locale file but is intentionally absent from navItems.
+    await expect(nav.getByRole('link', { name: 'Biyografi', exact: true })).toHaveCount(0)
+  })
 
-    // A control must be interactive — click should not throw.
-    await controls.first().click()
+  // --------------------------------------------------------------------------
+  // 6. FeaturedProducts either renders nothing (empty DB) or a valid grid
+  // --------------------------------------------------------------------------
+  test('FeaturedProducts section is resilient: renders nothing or a valid product grid', async ({ page }) => {
+    // FeaturedProducts renders `null` (no <section id="products">) when the
+    // API returns an empty product list, and a heading + grid otherwise
+    // (src/components/sections/FeaturedProducts.tsx). Local D1 may already
+    // have published products left over from other e2e runs or manual
+    // testing, so we don't assume a pristine empty state here — we assert
+    // the section is internally consistent for whichever state it's in
+    // rather than crashing. The "a specific product I just published is
+    // visible" case is covered precisely in public-content.spec.ts.
+    await page.goto('/')
+    await waitForLoaderGone(page)
+
+    const section = page.locator('#products')
+    const count = await section.count()
+    expect([0, 1]).toContain(count)
+
+    if (count === 1) {
+      await expect(section).toBeVisible()
+      await expect(section.getByRole('heading', { level: 2 })).toBeVisible()
+    }
+  })
+
+  // --------------------------------------------------------------------------
+  // 7. GalleryPreview shows a subset of seeded images
+  // --------------------------------------------------------------------------
+  test('gallery preview section shows a subset of the seeded gallery images', async ({ page }) => {
+    await page.goto('/')
+    await waitForLoaderGone(page)
+
+    // GalleryPreview (src/components/sections/GalleryPreview.tsx) fetches
+    // /api/gallery and renders `featured = items.slice(0, 6)` — with the
+    // seeded 20-item gallery this section must show exactly 6 images.
+    const gallerySection = page.locator('#gallery')
+    await gallerySection.scrollIntoViewIfNeeded()
+    await expect(gallerySection).toBeVisible()
+
+    const images = gallerySection.locator('img')
+    await expect(images).toHaveCount(6)
+
+    // "Tümünü Gör" (gallery.viewAll) link to /gallery.
+    await expect(gallerySection.getByRole('link', { name: 'Tümünü Gör' })).toBeVisible()
+  })
+
+  // --------------------------------------------------------------------------
+  // 8. Contact section is present
+  // --------------------------------------------------------------------------
+  test('contact section is present', async ({ page }) => {
+    await page.goto('/')
+    await waitForLoaderGone(page)
+
+    const contactSection = page.locator('#contact')
+    await contactSection.scrollIntoViewIfNeeded()
+    await expect(contactSection).toBeVisible()
   })
 
 })
