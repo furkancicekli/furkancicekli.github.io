@@ -43,7 +43,10 @@ function truncateDescription(text: string): string {
 }
 
 function replaceTitle(html: string, title: string): string {
-  return html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+  // Replacer FONKSİYONU şart: string replacement'ta value içindeki `$&`/`$'`
+  // kalıpları String.replace tarafından yorumlanır (escape edilmiş & işareti
+  // `&amp;` → `$&a...` üretebilir) ve meta bozulur.
+  return html.replace(/<title>[^<]*<\/title>/, () => `<title>${title}</title>`)
 }
 
 /** Replaces the `content="..."` value of a `<meta>` tag identified by its
@@ -53,7 +56,9 @@ function replaceTitle(html: string, title: string): string {
  * HTML parse. */
 function replaceMetaContent(html: string, attr: 'name' | 'property', key: string, value: string): string {
   const pattern = new RegExp(`(<meta\\s+${attr}="${key}"\\s+content=")[^"]*("\\s*/>)`)
-  return html.replace(pattern, `$1${value}$2`)
+  // Replacer fonksiyonu: value içindeki `$` dizileri (örn. escape edilmiş
+  // metinden gelen `$&`) literal kalsın — string replacement'ta yorumlanırdı.
+  return html.replace(pattern, (_m, pre: string, post: string) => `${pre}${value}${post}`)
 }
 
 productMetaRoutes.get('/products/:slug', async (c) => {

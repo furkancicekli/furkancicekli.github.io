@@ -172,6 +172,20 @@ describe('product-meta route', () => {
     expect(text).toContain('<title>Tesbih &quot;Kral&quot; &lt;script&gt; | Furkan Çiçekli | Tesbih Ustası</title>')
     expect(text).toContain('<meta property="og:title" content="Tesbih &quot;Kral&quot; &lt;script&gt;" />')
   })
+
+  it('treats $-sequences in product text literally (String.replace pattern injection)', async () => {
+    // `&` escape edilince `&amp;` olur; string-replacement kullanılsaydı `$&`
+    // dizisi replace kalıbı olarak yorumlanır ve meta bozulurdu.
+    await productStore.create(
+      validInput({ translations: { tr: { name: `Gümüş & İpek $' Tesbih`, description: `Fiyat $& kalite`, story: null } } }),
+    )
+
+    const res = await app.request('/products/kuka-tesbih', {}, { ASSETS: fakeAssets(HEAD_HTML) })
+    const text = await res.text()
+
+    expect(text).toContain('<meta property="og:title" content="Gümüş &amp; İpek $&#39; Tesbih" />')
+    expect(text).toContain('content="Fiyat $&amp; kalite"')
+  })
 })
 
 describe('escapeHtmlAttr', () => {

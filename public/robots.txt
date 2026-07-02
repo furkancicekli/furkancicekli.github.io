@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
+# Ürün paylaşım görselleri /api/media altında — botlar (FB/WhatsApp) og:image'ı
+# çekebilsin diye açık; API'nin kalanı tarama dışı.
+Allow: /api/media/
 Disallow: /admin
 Disallow: /api/
 
