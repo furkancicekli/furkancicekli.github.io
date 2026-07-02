@@ -21,6 +21,7 @@ import { adminMaterialsRoutes } from './routes/materials'
 import { adminGalleryRoutes, publicGalleryRoutes } from './routes/gallery'
 import { publicProductsRoutes } from './routes/public-products'
 import { sitemapRoutes } from './routes/sitemap'
+import { productMetaRoutes } from './routes/product-meta'
 import { requireAuth } from './middleware/require-auth'
 
 export type Bindings = {
@@ -91,6 +92,10 @@ app.use('/sitemap.xml', async (c, next) => {
   c.set('productStore', d1ProductStore(c.env.DB))
   await next()
 })
+app.use('/products/*', async (c, next) => {
+  c.set('productStore', d1ProductStore(c.env.DB))
+  await next()
+})
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin/products', productsRoutes)
 app.route('/api/admin', mediaRoutes)
@@ -105,5 +110,6 @@ app.route('/api/products', publicProductsRoutes)
 app.route('/api/verify', publicVerifyRoutes)
 app.route('/api/verify-serial', publicVerifySerialRoutes)
 app.route('/', sitemapRoutes)
+app.route('/', productMetaRoutes)
 
 export default app
