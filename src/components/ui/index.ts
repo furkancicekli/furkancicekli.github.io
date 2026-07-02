@@ -1,6 +1,5 @@
 export { LanguageSwitch } from './LanguageSwitch'
 export { ThemeSwitch } from './ThemeSwitch'
-export { ProjectCard } from './ProjectCard'
 export { ProductCard } from './ProductCard'
 export { ProductModal } from './ProductModal'
 export { Logo } from './Logo'

@@ -17,9 +17,9 @@ function mediaUrl(r2Key: string): string {
 }
 
 /**
- * Lightbox tile for a single gallery photo — same overlay/zoom/close pattern
- * as the previous static ProjectCard lightbox, minus title/description since
- * the managed gallery API carries no captions (just r2Key + sort).
+ * Lightbox tile for a single gallery photo — overlay/zoom/close pattern,
+ * with no title/description since the managed gallery API carries no
+ * captions (just r2Key + sort).
  */
 function GalleryTile({ item, index }: { item: GalleryItem; index: number }) {
   const { t } = useTranslation()

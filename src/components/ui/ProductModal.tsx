@@ -41,8 +41,8 @@ function mediaUrl(r2Key: string): string {
  * Content modal for a single product's detail view — distinct from
  * ConfirmDialog (alertdialog). Fetches its own data from
  * GET /api/products/:slug so callers stay thin (card just passes a slug).
- * Follows the existing lightbox pattern (fixed overlay, X, Escape, backdrop
- * click) seen in ProjectCard, plus body scroll lock while open.
+ * Follows a lightbox pattern (fixed overlay, X, Escape, backdrop click),
+ * plus body scroll lock while open.
  */
 export function ProductModal({ slug, onClose }: ProductModalProps) {
   const { t, i18n } = useTranslation()
