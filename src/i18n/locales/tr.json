@@ -7,6 +7,7 @@
   "nav": {
     "home": "Ana Sayfa",
     "about": "Biyografi",
+    "products": "Ürünler",
     "gallery": "Galeri",
     "verify": "Sertifika Sorgula",
     "contact": "İletişim"
@@ -49,6 +50,22 @@
       "other": "Diğer"
     }
   },
+  "products": {
+    "title": "Ürünler",
+    "subtitle": "Yayındaki tüm el yapımı tesbihler",
+    "empty": "Henüz yayında ürün yok."
+  },
+  "featuredProducts": {
+    "title": "Seçili İşler",
+    "subtitle": "Yayındaki en güncel el yapımı tesbihlerden bir seçki",
+    "viewAll": "Tümünü Gör"
+  },
+  "product": {
+    "material": "Malzeme",
+    "size": "Boyut",
+    "weight": "Gram",
+    "serial": "Seri No"
+  },
   "testimonials": {
     "title": "Müşteri Yorumları",
     "subtitle": "Mutlu müşterilerden geri bildirimler"
@@ -79,6 +96,7 @@
   "a11y": {
     "logo": "Furkan Çiçekli logosu",
     "prev": "Önceki",
-    "next": "Sonraki"
+    "next": "Sonraki",
+    "close": "Kapat"
   }
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { Layout } from '@/components/layout'
-import { HomePage, GalleryPage, VerifyPage, VerifyQueryPage } from '@/pages'
+import { HomePage, GalleryPage, ProductsPage, VerifyPage, VerifyQueryPage } from '@/pages'
 import {
   AdminLoginPage,
   AdminLayout,
@@ -53,6 +53,7 @@ function App() {
         <Routes>
           <Route element={<PublicShell />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/products" element={<ProductsPage />} />
             <Route path="/gallery" element={<GalleryPage />} />
           </Route>
           <Route path="/admin/login" element={<AdminLoginPage />} />

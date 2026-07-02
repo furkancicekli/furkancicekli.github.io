@@ -7,6 +7,7 @@
   "nav": {
     "home": "Home",
     "about": "Biography",
+    "products": "Works",
     "gallery": "Gallery",
     "verify": "Verify Certificate",
     "contact": "Contact"
@@ -49,6 +50,22 @@
       "other": "Other"
     }
   },
+  "products": {
+    "title": "Works",
+    "subtitle": "All currently published handmade prayer beads",
+    "empty": "No published works yet."
+  },
+  "featuredProducts": {
+    "title": "Selected Works",
+    "subtitle": "A selection of the latest published handmade prayer beads",
+    "viewAll": "View All"
+  },
+  "product": {
+    "material": "Material",
+    "size": "Size",
+    "weight": "Weight",
+    "serial": "Serial No"
+  },
   "testimonials": {
     "title": "Testimonials",
     "subtitle": "Feedback from happy customers"
@@ -79,6 +96,7 @@
   "a11y": {
     "logo": "Furkan Çiçekli logo",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "close": "Close"
   }
 }
