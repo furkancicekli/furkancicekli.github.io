@@ -1,23 +1,13 @@
 import { SEO } from '@/components/SEO'
-import {
-  Hero,
-  About,
-  CraftStack,
-  GalleryPreview,
-  Testimonials,
-  Contact,
-} from '@/components/sections'
+import { Hero, FeaturedProducts, GalleryPreview } from '@/components/sections'
 
 export function HomePage() {
   return (
     <>
       <SEO />
       <Hero />
-      <About />
-      <CraftStack />
+      <FeaturedProducts />
       <GalleryPreview />
-      <Testimonials />
-      <Contact />
     </>
   )
 }

@@ -8,22 +8,18 @@ export const siteConfig: SiteConfig = {
   email: 'furkancicekli@outlook.com',
   phone: '+905543875991',
   whatsapp: '+905543875991',
-  instagram: 'furkan.cicekli_',
+  instagram: 'furkanciceklitesbih',
   social: {
-    instagram: 'https://instagram.com/furkan.cicekli_',
+    instagram: 'https://instagram.com/furkanciceklitesbih',
     whatsapp: 'https://wa.me/905543875991',
   },
 }
 
 export const navItems: NavItem[] = [
   { key: 'home', href: '/' },
-  { key: 'about', href: '/#about' },
+  { key: 'products', href: '/products' },
   { key: 'gallery', href: '/gallery' },
-  { key: 'contact', href: '/#contact' },
-]
-
-export const stats = [
-  { value: 6, key: 'experience' },
-  { value: 100, key: 'projects', suffix: '+' },
-  { value: 2, key: 'kuwait' },
+  { key: 'faq', href: '/faq' },
+  { key: 'contact', href: '/contact' },
+  { key: 'verify', href: '/verify' },
 ]

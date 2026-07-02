@@ -1,18 +1,131 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ZoomIn, X } from 'lucide-react'
 import { SEO } from '@/components/SEO'
-import { ProjectCard } from '@/components/ui/ProjectCard'
-import { projects, getProjectsByCategory } from '@/content/projects'
 import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
-const categories = ['all', 'amber', 'kuka', 'oltu', 'other'] as const
+interface GalleryItem {
+  id: number
+  r2Key: string
+  sort: number
+}
+
+function mediaUrl(r2Key: string): string {
+  return `/api/media/${r2Key}`
+}
+
+/**
+ * Lightbox tile for a single gallery photo — overlay/zoom/close pattern,
+ * with no title/description since the managed gallery API carries no
+ * captions (just r2Key + sort).
+ */
+function GalleryTile({ item, index }: { item: GalleryItem; index: number }) {
+  const { t } = useTranslation()
+  const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [isOpen])
+
+  return (
+    <>
+      <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer bg-base-200"
+        onClick={() => setIsOpen(true)}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <img
+          src={mediaUrl(item.r2Key)}
+          alt=""
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-base-100/90 rounded-full p-2">
+            <ZoomIn className="w-5 h-5 text-base-content" />
+          </div>
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-[92vw] md:max-w-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={mediaUrl(item.r2Key)}
+                alt=""
+                className="block w-auto max-w-full max-h-[85vh] object-contain rounded-lg mx-auto"
+              />
+              <button
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  buttonVariants({ size: 'icon' }),
+                  'absolute top-4 right-4 rounded-full bg-base-100/90 text-foreground hover:bg-base-100 hover:text-foreground shadow-md',
+                )}
+                aria-label={t('a11y.close')}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
 
 export function GalleryPage() {
   const { t } = useTranslation()
-  const [activeCategory, setActiveCategory] = useState<string>('all')
+  const [items, setItems] = useState<GalleryItem[] | null>(null)
+  const [error, setError] = useState(false)
 
-  const filteredProjects = getProjectsByCategory(activeCategory)
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/gallery')
+      .then((res) => {
+        if (!res.ok) throw new Error('failed')
+        return res.json() as Promise<{ items: GalleryItem[] }>
+      })
+      .then((data) => {
+        if (!cancelled) setItems(data.items)
+      })
+      .catch(() => {
+        if (!cancelled) setError(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const loading = items === null && !error
+  const list = items ?? []
 
   return (
     <>
@@ -38,84 +151,38 @@ export function GalleryPage() {
             </p>
           </motion.div>
 
-          {/* Category Filter */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex flex-wrap justify-center gap-2 mb-12"
-          >
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={buttonVariants({
-                  variant: activeCategory === category ? 'default' : 'ghost',
-                  size: 'sm',
-                })}
-              >
-                {t(`gallery.categories.${category}`)}
-              </button>
-            ))}
-          </motion.div>
+          {loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="aspect-square rounded-xl bg-base-200 animate-pulse" />
+              ))}
+            </div>
+          )}
 
-          {/* Projects Grid */}
-          <motion.div
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-          >
-            {filteredProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <ProjectCard project={project} />
-              </motion.div>
-            ))}
-          </motion.div>
+          {!loading && error && (
+            <p className="text-center text-base-content/80">{t('common.error')}</p>
+          )}
 
-          {/* Empty State */}
-          {filteredProjects.length === 0 && (
+          {!loading && !error && list.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <p className="text-base-content/80">
-                {t('common.loading')}
-              </p>
+              <p className="text-base-content/80">{t('gallery.empty')}</p>
             </motion.div>
           )}
 
-          {/* Info for adding new projects */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-16 text-center"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-base-200 border border-base-300 rounded-full text-sm text-base-content/80">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              {projects.length} {t('stats.projects').toLowerCase().replace('+', '')}
-            </div>
-          </motion.div>
+          {!loading && !error && list.length > 0 && (
+            <motion.div
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              {list.map((item, index) => (
+                <GalleryTile key={item.id} item={item} index={index} />
+              ))}
+            </motion.div>
+          )}
         </div>
       </section>
     </>

@@ -7,7 +7,10 @@
   "nav": {
     "home": "Home",
     "about": "Biography",
+    "products": "Works",
     "gallery": "Gallery",
+    "faq": "FAQ",
+    "verify": "Verify Certificate",
     "contact": "Contact"
   },
   "hero": {
@@ -40,6 +43,7 @@
     "title": "Gallery",
     "subtitle": "Handcrafted works",
     "viewAll": "View All",
+    "empty": "No gallery photos yet.",
     "categories": {
       "all": "All",
       "amber": "Amber",
@@ -47,6 +51,35 @@
       "oltu": "Jet Stone",
       "other": "Other"
     }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Quick answers to common questions",
+    "empty": "No questions added yet."
+  },
+  "products": {
+    "title": "Works",
+    "subtitle": "All currently published handmade prayer beads",
+    "empty": "No published works yet."
+  },
+  "featuredProducts": {
+    "title": "Selected Works",
+    "subtitle": "A selection of the latest published handmade prayer beads",
+    "viewAll": "View All"
+  },
+  "product": {
+    "material": "Material",
+    "size": "Size",
+    "weight": "Weight",
+    "serial": "Serial No",
+    "specs": "Specifications",
+    "story": "Story",
+    "verifyCta": "Verify certificate",
+    "whatsappCta": "Ask about this piece",
+    "backToAll": "All works",
+    "notFound": "Work not found",
+    "notFoundBody": "The work you're looking for may have been unpublished or never existed.",
+    "processTitle": "Making Process"
   },
   "testimonials": {
     "title": "Testimonials",
@@ -78,6 +111,9 @@
   "a11y": {
     "logo": "Furkan Çiçekli logo",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "close": "Close",
+    "nextImage": "Next image",
+    "prevImage": "Previous image"
   }
 }

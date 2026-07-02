@@ -7,7 +7,10 @@
   "nav": {
     "home": "Ana Sayfa",
     "about": "Biyografi",
+    "products": "Ürünler",
     "gallery": "Galeri",
+    "faq": "SSS",
+    "verify": "Sertifika Sorgula",
     "contact": "İletişim"
   },
   "hero": {
@@ -40,6 +43,7 @@
     "title": "Galeri",
     "subtitle": "El emeği, göz nuru çalışmaları",
     "viewAll": "Tümünü Gör",
+    "empty": "Henüz galeri fotoğrafı yok.",
     "categories": {
       "all": "Tümü",
       "amber": "Kehribar",
@@ -47,6 +51,35 @@
       "oltu": "Oltu Taşı",
       "other": "Diğer"
     }
+  },
+  "faq": {
+    "title": "Sıkça Sorulan Sorular",
+    "subtitle": "Merak ettiklerinize hızlı yanıtlar",
+    "empty": "Henüz soru eklenmedi."
+  },
+  "products": {
+    "title": "Ürünler",
+    "subtitle": "Yayındaki tüm el yapımı tesbihler",
+    "empty": "Henüz yayında ürün yok."
+  },
+  "featuredProducts": {
+    "title": "Seçili İşler",
+    "subtitle": "Yayındaki en güncel el yapımı tesbihlerden bir seçki",
+    "viewAll": "Tümünü Gör"
+  },
+  "product": {
+    "material": "Malzeme",
+    "size": "Boyut",
+    "weight": "Gram",
+    "serial": "Seri No",
+    "specs": "Özellikler",
+    "story": "Hikaye",
+    "verifyCta": "Sertifikayı doğrula",
+    "whatsappCta": "Bu eser hakkında yaz",
+    "backToAll": "Tüm eserler",
+    "notFound": "Eser bulunamadı",
+    "notFoundBody": "Aradığınız eser yayından kaldırılmış veya hiç yayınlanmamış olabilir.",
+    "processTitle": "Yapım Aşamaları"
   },
   "testimonials": {
     "title": "Müşteri Yorumları",
@@ -78,6 +111,9 @@
   "a11y": {
     "logo": "Furkan Çiçekli logosu",
     "prev": "Önceki",
-    "next": "Sonraki"
+    "next": "Sonraki",
+    "close": "Kapat",
+    "nextImage": "Sonraki görsel",
+    "prevImage": "Önceki görsel"
   }
 }

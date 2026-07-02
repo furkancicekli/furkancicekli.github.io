@@ -27,22 +27,9 @@ export function Header() {
     setIsMobileMenuOpen(false)
   }, [location])
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith('/#')) {
-      e.preventDefault()
-      const id = href.replace('/#', '')
-      const element = document.getElementById(id)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
-      } else if (location.pathname !== '/') {
-        window.location.href = href
-      }
-    }
-  }
-
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`print:hidden fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
           ? 'bg-base-100 backdrop-blur-md shadow-sm'
           : 'bg-base-100/80 backdrop-blur-sm'
@@ -55,7 +42,7 @@ export function Header() {
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
             <Logo className="h-10 w-[21px] md:h-12 md:w-[25px] text-foreground" />
-            <span className="text-xl md:text-2xl font-serif font-bold text-base-content">
+            <span className="text-base md:text-lg font-serif font-bold text-base-content">
               {siteConfig.name}
             </span>
           </Link>
@@ -65,7 +52,6 @@ export function Header() {
               <Link
                 key={item.key}
                 to={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
                 className="text-base-content font-medium hover:text-primary transition-colors"
               >
                 {t(`nav.${item.key}`)}
@@ -116,7 +102,6 @@ export function Header() {
                 <Link
                   key={item.key}
                   to={item.href}
-                  onClick={(e) => handleNavClick(e, item.href)}
                   className="text-base-content font-medium hover:text-primary transition-colors py-2"
                 >
                   {t(`nav.${item.key}`)}

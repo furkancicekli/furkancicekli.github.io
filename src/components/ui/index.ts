@@ -1,6 +1,6 @@
 export { LanguageSwitch } from './LanguageSwitch'
 export { ThemeSwitch } from './ThemeSwitch'
-export { ProjectCard } from './ProjectCard'
+export { ProductCard } from './ProductCard'
 export { Logo } from './Logo'
 export { LoadingScreen } from './LoadingScreen'
-export { DancingLetters } from './DancingLetters'
+export { Lightbox } from './Lightbox'
