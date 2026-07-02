@@ -12,6 +12,7 @@ import {
   AdminProductsPage,
   AdminProductEditPage,
   AdminProductWizard,
+  AdminGalleryPage,
   AdminFaqPage,
   AdminCertificatesPage,
   contentSections,
@@ -63,6 +64,7 @@ function App() {
             <Route path="products" element={<AdminProductsPage />} />
             <Route path="products/new" element={<AdminProductWizard />} />
             <Route path="products/:id" element={<AdminProductEditPage />} />
+            <Route path="gallery" element={<AdminGalleryPage />} />
             <Route path="faq" element={<AdminFaqPage />} />
             <Route path="certificates" element={<AdminCertificatesPage />} />
             {/* Henüz açılmamış içerik bölümleri — "yakında" sayfaları. Bir bölüm

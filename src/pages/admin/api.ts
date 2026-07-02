@@ -411,6 +411,84 @@ export async function patchCertificate(
   }
 }
 
+export interface GalleryItem {
+  id: number
+  r2Key: string
+  sort: number
+}
+
+export async function listGallery(): Promise<
+  { ok: true; data: GalleryItem[] } | { ok: false; error: string }
+> {
+  try {
+    const res = await fetch('/api/gallery', { credentials: 'same-origin' })
+    if (res.ok) {
+      const data = (await res.json()) as { items: GalleryItem[] }
+      return { ok: true, data: data.items }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function uploadGalleryImage(
+  file: File,
+): Promise<{ ok: true; data: GalleryItem } | { ok: false; error: string }> {
+  try {
+    const form = new FormData()
+    form.set('file', file)
+    // content-type ayarlanmaz — tarayıcı multipart boundary'yi kendi ekler
+    const res = await fetch('/api/admin/gallery', {
+      method: 'POST',
+      body: form,
+      credentials: 'same-origin',
+    })
+    if (res.ok) {
+      const data = (await res.json()) as GalleryItem
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function patchGallerySort(
+  id: number,
+  sort: number,
+): Promise<{ ok: true; data: GalleryItem } | { ok: false; error: string }> {
+  try {
+    const res = await fetch(`/api/admin/gallery/${id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ sort }),
+      credentials: 'same-origin',
+    })
+    if (res.ok) {
+      const data = (await res.json()) as GalleryItem
+      return { ok: true, data }
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
+export async function deleteGalleryItem(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await del(`/api/admin/gallery/${id}`)
+    if (res.ok) return { ok: true }
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: false, error: data.error ?? 'unknown' }
+  } catch {
+    return { ok: false, error: 'network' }
+  }
+}
+
 export interface Material {
   id: number
   name: string

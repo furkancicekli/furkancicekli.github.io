@@ -4,7 +4,7 @@
  * "yakında" sayfası gösterir (Faz 3 / Faz 5'te içerik yönetimi eklenecek).
  */
 import type { LucideIcon } from 'lucide-react'
-import { LayoutGrid, Package, MessageCircleQuestion, BadgeCheck, Settings } from 'lucide-react'
+import { LayoutGrid, Package, Images, MessageCircleQuestion, BadgeCheck, Settings } from 'lucide-react'
 
 export interface AdminSection {
   path: string
@@ -28,6 +28,13 @@ export const contentSections: AdminSection[] = [
     label: 'Ürünler',
     description: 'Ürün ekleme, fotoğraf ve video yönetimi.',
     icon: Package,
+    ready: true,
+  },
+  {
+    path: '/admin/gallery',
+    label: 'Galeri',
+    description: 'Sitedeki galeri fotoğraflarının yönetimi.',
+    icon: Images,
     ready: true,
   },
   {
