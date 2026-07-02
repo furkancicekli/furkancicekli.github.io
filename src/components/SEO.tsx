@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 import { siteConfig } from '@/content/config'
 
 interface SEOProps {
@@ -9,7 +10,12 @@ interface SEOProps {
   url?: string
   type?: 'website' | 'article'
   noindex?: boolean
+  /** Sayfaya özgü ek JSON-LD (örn. FAQPage, ItemList) — Person şemasına ek olarak basılır. */
+  structuredDataExtra?: Record<string, unknown> | null
 }
+
+/** og:locale, dil kodunu değil bölgeli biçimi bekler (tr değil tr_TR). */
+const OG_LOCALES: Record<string, string> = { tr: 'tr_TR', en: 'en_US', ar: 'ar_SA' }
 
 export function SEO({
   title,
@@ -18,13 +24,20 @@ export function SEO({
   url,
   type = 'website',
   noindex = false,
+  structuredDataExtra = null,
 }: SEOProps) {
   const { t, i18n } = useTranslation()
+  const { pathname } = useLocation()
 
   const seoTitle = title || t('meta.title')
   const seoDescription = description || t('meta.description')
-  const seoUrl = url || siteConfig.url
+  // Canonical her sayfada kendi yolunu göstermeli — hepsi ana sayfayı
+  // gösterirse arama motoru alt sayfaları kopya sayar.
+  const seoUrl = url || `${siteConfig.url}${pathname === '/' ? '' : pathname}`
   const seoImage = image.startsWith('http') ? image : `${siteConfig.url}${image}`
+  const lang2 = (i18n.language || 'tr').slice(0, 2)
+  const ogLocale = OG_LOCALES[lang2] ?? 'tr_TR'
+  const ogAlternates = Object.values(OG_LOCALES).filter((l) => l !== ogLocale)
 
   // React does not hoist <html> attributes; set lang/dir imperatively.
   useEffect(() => {
@@ -59,7 +72,10 @@ export function SEO({
       <meta property="og:image" content={seoImage} />
       <meta property="og:url" content={seoUrl} />
       <meta property="og:site_name" content={siteConfig.name} />
-      <meta property="og:locale" content={i18n.language} />
+      <meta property="og:locale" content={ogLocale} />
+      {ogAlternates.map((l) => (
+        <meta key={l} property="og:locale:alternate" content={l} />
+      ))}
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={seoTitle} />
@@ -67,6 +83,9 @@ export function SEO({
       <meta name="twitter:image" content={seoImage} />
 
       <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      {structuredDataExtra && (
+        <script type="application/ld+json">{JSON.stringify(structuredDataExtra)}</script>
+      )}
     </>
   )
 }

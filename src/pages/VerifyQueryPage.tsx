@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Logo } from '@/components/ui'
+import { SEO } from '@/components/SEO'
 
 const inputClass =
   'w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
@@ -83,6 +84,10 @@ export function VerifyQueryPage() {
 
   return (
     <main className="flex min-h-[70vh] items-center justify-center bg-background px-4 py-12">
+      <SEO
+        title="Sertifika Sorgula | Furkan Çiçekli"
+        description="Furkan Çiçekli el yapımı tesbihlerinin orijinallik sertifikasını 16 haneli numarayla sorgula."
+      />
       <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-card p-8 text-center">
         <div className="flex justify-center">
           <Logo decorative className="h-16 w-[33px] text-foreground" />

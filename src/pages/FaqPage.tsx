@@ -44,11 +44,26 @@ export function FaqPage() {
   const loading = faqs === null && !error
   const items = faqs ?? []
 
+  // FAQPage şeması — Google'da zengin sonuç (açılır soru-cevap) şansı verir
+  const faqSchema =
+    items.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: items.map((f) => ({
+            '@type': 'Question',
+            name: f.question,
+            acceptedAnswer: { '@type': 'Answer', text: f.answer },
+          })),
+        }
+      : null
+
   return (
     <>
       <SEO
         title={`${t('faq.title')} | ${t('meta.title')}`}
         description={t('faq.subtitle')}
+        structuredDataExtra={faqSchema}
       />
 
       <section className="pt-24 pb-16 bg-base-100">

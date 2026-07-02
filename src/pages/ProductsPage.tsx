@@ -41,11 +41,32 @@ export function ProductsPage() {
   const loading = products === null && !error
   const items = products ?? []
 
+  // ItemList şeması — yayındaki eserleri arama motoruna yapılandırılmış listeler
+  const listSchema =
+    items.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          itemListElement: items.map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': 'Product',
+              name: p.name ?? p.slug,
+              ...(p.cover ? { image: `https://furkancicekli.com/api/media/${p.cover}` } : {}),
+              ...(p.material ? { material: p.material } : {}),
+              url: 'https://furkancicekli.com/products',
+            },
+          })),
+        }
+      : null
+
   return (
     <>
       <SEO
         title={`${t('products.title')} | ${t('meta.title')}`}
         description={t('products.subtitle')}
+        structuredDataExtra={listSchema}
       />
 
       <section className="pt-24 pb-16 bg-base-100">

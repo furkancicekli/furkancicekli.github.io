@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Logo } from '@/components/ui'
+import { SEO } from '@/components/SEO'
 import { formatSerial } from './admin/serial-format'
 
 interface VerifyCertificate {
@@ -55,9 +56,13 @@ export function VerifyPage() {
     }
   }, [token])
 
+  // Sertifika sayfaları indekslenmez: token'a özel, ince içerik + alıcı adı taşıyabilir
+  const seo = <SEO title="Orijinallik Sertifikası | Furkan Çiçekli" noindex />
+
   if (state.status === 'loading') {
     return (
       <main className="flex min-h-[70vh] items-center justify-center bg-background px-4 text-muted-foreground">
+        {seo}
         Yükleniyor…
       </main>
     )
@@ -66,6 +71,7 @@ export function VerifyPage() {
   if (state.status === 'invalid') {
     return (
       <main className="flex min-h-[70vh] items-center justify-center bg-background px-4">
+        {seo}
         <div className="max-w-md space-y-3 text-center">
           <h1 className="font-serif text-2xl font-bold text-foreground">Sertifika bulunamadı</h1>
           <p className="text-sm text-muted-foreground">
@@ -83,6 +89,7 @@ export function VerifyPage() {
 
   return (
     <main className="flex min-h-[70vh] items-center justify-center bg-background px-4 py-12">
+      {seo}
       <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-card p-8 text-center print:border-none print:p-0 print:shadow-none">
         <div className="flex justify-center">
           <Logo decorative className="h-16 w-[33px] text-foreground" />
