@@ -78,7 +78,7 @@ describe('products routes', () => {
   it('creates a product with auto-generated slug, serial, status=draft, and a certificate', async () => {
     const res = await post(validInput())
     expect(res.status).toBe(201)
-    const body = await json<ProductDetail & { certificate: { serialNo: string; qrToken: string } }>(res)
+    const body = await json<ProductDetail & { certificate: { id: number; serialNo: string; qrToken: string } }>(res)
 
     expect(body.slug.startsWith('kuka-tesbih')).toBe(true)
     expect(body.status).toBe('draft')
@@ -87,6 +87,7 @@ describe('products routes', () => {
     expect(body.translations.tr?.name).toBe('Kuka Tesbih')
 
     expect(body.certificate).toBeDefined()
+    expect(body.certificate.id).toBeTypeOf('number')
     expect(body.certificate.serialNo).toBe(body.serialNo)
     expect(body.certificate.qrToken).toBeTypeOf('string')
     expect(body.certificate.qrToken.length).toBeGreaterThan(0)
@@ -95,6 +96,7 @@ describe('products routes', () => {
     expect(certStore.certificates).toHaveLength(1)
     expect(certStore.certificates[0].productId).toBe(body.id)
     expect(certStore.certificates[0].serialNo).toBe(body.serialNo)
+    expect(certStore.certificates[0].id).toBe(body.certificate.id)
   })
 
   it('appends a random suffix to the slug on collision', async () => {

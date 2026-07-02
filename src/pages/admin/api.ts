@@ -71,7 +71,7 @@ export interface ProductDetail {
 
 /** POST /api/admin/products response: ProductDetail plus the auto-created certificate. */
 export interface ProductDetailWithCertificate extends ProductDetail {
-  certificate: { serialNo: string; qrToken: string }
+  certificate: { id: number; serialNo: string; qrToken: string }
 }
 
 /** Input accepted by POST/PUT /api/admin/products — no slug/serialNo/status/price. */

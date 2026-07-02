@@ -3,13 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import QRCode from 'qrcode'
-import {
-  createProduct,
-  listCertificates,
-  patchCertificate,
-  publishProduct,
-  updateProduct,
-} from './api'
+import { createProduct, patchCertificate, publishProduct, updateProduct } from './api'
 import { MaterialSelect } from './MaterialSelect'
 import { MediaUploader } from './MediaUploader'
 import { formatSerial } from './serial-format'
@@ -109,15 +103,15 @@ function MediaStep({ productId, kind, helperText, onBack, onNext }: MediaStepPro
 
 interface CertificateStepProps {
   productId: number
+  certificateId: number
   serialNo: string
   qrToken: string
   onBack: () => void
 }
 
-function CertificateStep({ productId, serialNo, qrToken, onBack }: CertificateStepProps) {
+function CertificateStep({ productId, certificateId, serialNo, qrToken, onBack }: CertificateStepProps) {
   const navigate = useNavigate()
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
-  const [certificateId, setCertificateId] = useState<number | null>(null)
   const [buyerName, setBuyerName] = useState('')
   const [buyerBusy, setBuyerBusy] = useState(false)
   const [buyerMessage, setBuyerMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
@@ -138,26 +132,8 @@ function CertificateStep({ productId, serialNo, qrToken, onBack }: CertificateSt
     }
   }, [qrToken])
 
-  // POST /api/admin/products yalnızca {serialNo, qrToken} döner, sertifikanın
-  // kendi id'sini değil (PATCH /api/admin/certificates/:id için gerekli).
-  // Listeden productId eşleşmesiyle bulunur.
-  useEffect(() => {
-    let cancelled = false
-    listCertificates().then((result) => {
-      if (cancelled) return
-      if (result.ok) {
-        const match = result.data.find((c) => c.productId === productId)
-        if (match) setCertificateId(match.id)
-      }
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [productId])
-
   async function handleSaveBuyer(e: FormEvent) {
     e.preventDefault()
-    if (certificateId === null) return
     setBuyerMessage(null)
     setBuyerBusy(true)
     const result = await patchCertificate(certificateId, buyerName.trim() === '' ? null : buyerName.trim())
@@ -224,7 +200,7 @@ function CertificateStep({ productId, serialNo, qrToken, onBack }: CertificateSt
         </label>
         <button
           type="submit"
-          disabled={buyerBusy || certificateId === null}
+          disabled={buyerBusy}
           className="rounded-md border border-border px-4 py-2 text-sm font-medium outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         >
           {buyerBusy ? 'Kaydediliyor…' : 'Kaydet'}
@@ -284,7 +260,7 @@ function CertificateStep({ productId, serialNo, qrToken, onBack }: CertificateSt
 export function AdminProductWizard() {
   const [step, setStep] = useState<WizardStep>(1)
   const [productId, setProductId] = useState<number | null>(null)
-  const [certificate, setCertificate] = useState<{ serialNo: string; qrToken: string } | null>(null)
+  const [certificate, setCertificate] = useState<{ id: number; serialNo: string; qrToken: string } | null>(null)
 
   const [nameTr, setNameTr] = useState('')
   const [material, setMaterial] = useState<string | null>(null)
@@ -443,6 +419,7 @@ export function AdminProductWizard() {
       {step === 4 && productId !== null && certificate !== null && (
         <CertificateStep
           productId={productId}
+          certificateId={certificate.id}
           serialNo={certificate.serialNo}
           qrToken={certificate.qrToken}
           onBack={() => setStep(3)}

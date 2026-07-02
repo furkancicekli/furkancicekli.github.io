@@ -148,13 +148,17 @@ productsRoutes.post('/', async (c) => {
   const certStore = c.get('certStore')
   try {
     const certificate = await certStore.create(detail.id, serialNo, newToken(), null)
-    return c.json({ ...detail, certificate: { serialNo: certificate.serialNo, qrToken: certificate.qrToken } }, 201)
+    return c.json(
+      { ...detail, certificate: { id: certificate.id, serialNo: certificate.serialNo, qrToken: certificate.qrToken } },
+      201,
+    )
   } catch {
     // sertifika oluşmazsa ürünü geri al — sertifikasız ürün kalmasın
     try {
       await store.delete(detail.id)
-    } catch {
+    } catch (err) {
       // Rollback başarısız olsa bile, certificate hatası daha önemli
+      console.error('certificate rollback failed', err)
     }
     return c.json({ error: 'certificate_failed' }, 500)
   }
