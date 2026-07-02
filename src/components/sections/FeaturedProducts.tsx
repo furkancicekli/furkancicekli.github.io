@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { ProductCard, type ProductListItem } from '@/components/ui/ProductCard'
-import { ProductModal } from '@/components/ui/ProductModal'
 import { Button } from '@/components/ui/button'
 
 function normalizeLang(lang: string): string {
@@ -22,7 +21,6 @@ export function FeaturedProducts() {
   const lang = normalizeLang(i18n.language)
 
   const [products, setProducts] = useState<ProductListItem[]>([])
-  const [activeSlug, setActiveSlug] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -73,7 +71,7 @@ export function FeaturedProducts() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <ProductCard product={product} onOpen={setActiveSlug} />
+              <ProductCard product={product} />
             </motion.div>
           ))}
         </div>
@@ -93,10 +91,6 @@ export function FeaturedProducts() {
           </Button>
         </motion.div>
       </div>
-
-      {activeSlug && (
-        <ProductModal slug={activeSlug} onClose={() => setActiveSlug(null)} />
-      )}
     </section>
   )
 }

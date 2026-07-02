@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { SEO } from '@/components/SEO'
 import { ProductCard, type ProductListItem } from '@/components/ui/ProductCard'
-import { ProductModal } from '@/components/ui/ProductModal'
 
 function normalizeLang(lang: string): string {
   const short = lang.split('-')[0]?.toLowerCase()
@@ -16,7 +15,6 @@ export function ProductsPage() {
 
   const [products, setProducts] = useState<ProductListItem[] | null>(null)
   const [error, setError] = useState(false)
-  const [activeSlug, setActiveSlug] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -117,17 +115,13 @@ export function ProductsPage() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
                 >
-                  <ProductCard product={product} onOpen={setActiveSlug} />
+                  <ProductCard product={product} />
                 </motion.div>
               ))}
             </div>
           )}
         </div>
       </section>
-
-      {activeSlug && (
-        <ProductModal slug={activeSlug} onClose={() => setActiveSlug(null)} />
-      )}
     </>
   )
 }

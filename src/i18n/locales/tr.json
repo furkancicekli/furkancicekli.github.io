@@ -71,7 +71,15 @@
     "material": "Malzeme",
     "size": "Boyut",
     "weight": "Gram",
-    "serial": "Seri No"
+    "serial": "Seri No",
+    "specs": "Özellikler",
+    "story": "Hikaye",
+    "verifyCta": "Sertifikayı doğrula",
+    "whatsappCta": "Bu eser hakkında yaz",
+    "backToAll": "Tüm eserler",
+    "notFound": "Eser bulunamadı",
+    "notFoundBody": "Aradığınız eser yayından kaldırılmış veya hiç yayınlanmamış olabilir.",
+    "processTitle": "Yapım Aşamaları"
   },
   "testimonials": {
     "title": "Müşteri Yorumları",
@@ -104,6 +112,8 @@
     "logo": "Furkan Çiçekli logosu",
     "prev": "Önceki",
     "next": "Sonraki",
-    "close": "Kapat"
+    "close": "Kapat",
+    "nextImage": "Sonraki görsel",
+    "prevImage": "Önceki görsel"
   }
 }

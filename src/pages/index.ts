@@ -1,6 +1,7 @@
 export { HomePage } from './HomePage'
 export { GalleryPage } from './GalleryPage'
 export { ProductsPage } from './ProductsPage'
+export { ProductDetailPage } from './ProductDetailPage'
 export { FaqPage } from './FaqPage'
 export { ContactPage } from './ContactPage'
 export { VerifyPage } from './VerifyPage'

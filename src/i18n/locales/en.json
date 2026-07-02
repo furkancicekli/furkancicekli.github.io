@@ -71,7 +71,15 @@
     "material": "Material",
     "size": "Size",
     "weight": "Weight",
-    "serial": "Serial No"
+    "serial": "Serial No",
+    "specs": "Specifications",
+    "story": "Story",
+    "verifyCta": "Verify certificate",
+    "whatsappCta": "Ask about this piece",
+    "backToAll": "All works",
+    "notFound": "Work not found",
+    "notFoundBody": "The work you're looking for may have been unpublished or never existed.",
+    "processTitle": "Making Process"
   },
   "testimonials": {
     "title": "Testimonials",
@@ -104,6 +112,8 @@
     "logo": "Furkan Çiçekli logo",
     "prev": "Previous",
     "next": "Next",
-    "close": "Close"
+    "close": "Close",
+    "nextImage": "Next image",
+    "prevImage": "Previous image"
   }
 }

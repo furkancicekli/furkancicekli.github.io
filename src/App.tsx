@@ -6,6 +6,7 @@ import {
   HomePage,
   GalleryPage,
   ProductsPage,
+  ProductDetailPage,
   FaqPage,
   ContactPage,
   VerifyPage,
@@ -73,6 +74,7 @@ function App() {
           <Route element={<PublicShell />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:slug" element={<ProductDetailPage />} />
             <Route path="/gallery" element={<GalleryPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/contact" element={<ContactPage />} />
