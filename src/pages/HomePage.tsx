@@ -1,5 +1,5 @@
 import { SEO } from '@/components/SEO'
-import { Hero, FeaturedProducts, GalleryPreview, Contact } from '@/components/sections'
+import { Hero, FeaturedProducts, GalleryPreview } from '@/components/sections'
 
 export function HomePage() {
   return (
@@ -8,7 +8,6 @@ export function HomePage() {
       <Hero />
       <FeaturedProducts />
       <GalleryPreview />
-      <Contact />
     </>
   )
 }

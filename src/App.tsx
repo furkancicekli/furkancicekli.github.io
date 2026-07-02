@@ -76,10 +76,11 @@ function App() {
             <Route path="/gallery" element={<GalleryPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            {/* Doğrulama sayfaları da site kabuğunda — ziyaretçi nav'dan gezinebilsin */}
+            <Route path="/verify" element={<VerifyQueryPage />} />
+            <Route path="/verify/:token" element={<VerifyPage />} />
           </Route>
           <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/verify" element={<VerifyQueryPage />} />
-          <Route path="/verify/:token" element={<VerifyPage />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />

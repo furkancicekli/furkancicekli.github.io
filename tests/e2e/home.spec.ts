@@ -239,15 +239,5 @@ test.describe('Home page smoke tests', () => {
   })
 
   // --------------------------------------------------------------------------
-  // 8. Contact section is present
-  // --------------------------------------------------------------------------
-  test('contact section is present', async ({ page }) => {
-    await page.goto('/')
-    await waitForLoaderGone(page)
-
-    const contactSection = page.locator('#contact')
-    await contactSection.scrollIntoViewIfNeeded()
-    await expect(contactSection).toBeVisible()
-  })
 
 })

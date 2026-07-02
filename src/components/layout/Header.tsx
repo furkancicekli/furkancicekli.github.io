@@ -29,7 +29,7 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`print:hidden fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
           ? 'bg-base-100 backdrop-blur-md shadow-sm'
           : 'bg-base-100/80 backdrop-blur-sm'

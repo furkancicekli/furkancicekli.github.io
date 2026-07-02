@@ -43,8 +43,8 @@ function formatSerialInput(raw: string): string {
 /**
  * Genel sertifika sorgulama sayfası: ziyaretçi karttaki 16 haneli seri
  * numarasını girer, geçerliyse ilgili /verify/:token sayfasına yönlendirilir.
- * Kimlik doğrulama gerektirmez, App.tsx'te PublicShell ve /admin dışında
- * bağımsız bir rota olarak tanımlıdır (VerifyPage ile aynı görsel aile).
+ * Kimlik doğrulama gerektirmez; site kabuğu (nav+footer) içinde render edilir
+ * ki ziyaretçi diğer sayfalara geçebilsin (VerifyPage ile aynı görsel aile).
  */
 export function VerifyQueryPage() {
   const navigate = useNavigate()
@@ -82,7 +82,7 @@ export function VerifyQueryPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <main className="flex min-h-[70vh] items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-card p-8 text-center">
         <div className="flex justify-center">
           <Logo decorative className="h-16 w-[33px] text-foreground" />
