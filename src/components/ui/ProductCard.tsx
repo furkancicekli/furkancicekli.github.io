@@ -11,6 +11,7 @@ export interface ProductListItem {
   size: string | null
   weightGrams: number | null
   cover: string | null
+  coverType: 'image' | 'video' | null
   mediaCount: number
 }
 
@@ -29,7 +30,17 @@ export function ProductCard({ product }: ProductCardProps) {
         className="group block text-left rounded-xl overflow-hidden bg-base-200 border border-base-300 hover:shadow-md transition-shadow"
       >
         <div className="aspect-square w-full overflow-hidden bg-base-300">
-          {product.cover ? (
+          {product.cover && product.coverType === 'video' ? (
+            <video
+              src={`/api/media/${product.cover}`}
+              muted
+              autoPlay
+              loop
+              playsInline
+              preload="metadata"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : product.cover ? (
             <img
               src={`/api/media/${product.cover}`}
               alt={product.name ?? ''}

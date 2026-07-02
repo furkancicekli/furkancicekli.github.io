@@ -51,7 +51,9 @@ export function ProductsPage() {
             item: {
               '@type': 'Product',
               name: p.name ?? p.slug,
-              ...(p.cover ? { image: `https://furkancicekli.com/api/media/${p.cover}` } : {}),
+              ...(p.cover && p.coverType === 'image'
+                ? { image: `https://furkancicekli.com/api/media/${p.cover}` }
+                : {}),
               ...(p.material ? { material: p.material } : {}),
               url: 'https://furkancicekli.com/products',
             },

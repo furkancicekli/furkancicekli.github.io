@@ -53,6 +53,13 @@ function firstGalleryCover(media: ProductMediaItem[]): string | null {
   return galleryMedia[0]?.r2Key ?? null
 }
 
+function firstGalleryCoverType(media: ProductMediaItem[]): 'image' | 'video' | null {
+  const galleryMedia = media
+    .filter((m) => m.kind === 'gallery')
+    .sort((a, b) => a.sort - b.sort || a.id - b.id)
+  return galleryMedia[0]?.type ?? null
+}
+
 publicProductsRoutes.get('/', async (c) => {
   const lang = resolveLang(c.req.query('lang'))
   const store = c.get('productStore')
@@ -66,6 +73,7 @@ publicProductsRoutes.get('/', async (c) => {
     size: p.size,
     weightGrams: p.weightGrams,
     cover: firstGalleryCover(p.media),
+    coverType: firstGalleryCoverType(p.media),
     mediaCount: p.media.length,
   }))
 

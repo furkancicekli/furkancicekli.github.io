@@ -138,6 +138,34 @@ describe('public products routes', () => {
       expect(body.products[0].cover).toBeNull()
     })
 
+    it('sets coverType to video when the first gallery media is a video', async () => {
+      const p = await productStore.create(validInput({ slug: 'video-cover', status: 'published' }))
+      await productStore.addMedia(p.id, { type: 'video', r2Key: 'gallery-vid.mp4', kind: 'gallery', sort: 0 })
+      await productStore.addMedia(p.id, { type: 'image', r2Key: 'gallery-img.jpg', kind: 'gallery', sort: 1 })
+
+      const res = await app.request('/api/products')
+      const body = await json<{ products: { cover: string | null; coverType: string | null }[] }>(res)
+      expect(body.products[0]).toMatchObject({ cover: 'gallery-vid.mp4', coverType: 'video' })
+    })
+
+    it('sets coverType to image when the first gallery media is an image', async () => {
+      const p = await productStore.create(validInput({ slug: 'image-cover', status: 'published' }))
+      await productStore.addMedia(p.id, { type: 'image', r2Key: 'gallery-img.jpg', kind: 'gallery', sort: 0 })
+
+      const res = await app.request('/api/products')
+      const body = await json<{ products: { cover: string | null; coverType: string | null }[] }>(res)
+      expect(body.products[0]).toMatchObject({ cover: 'gallery-img.jpg', coverType: 'image' })
+    })
+
+    it('sets coverType to null when there is no gallery-kind media', async () => {
+      const p = await productStore.create(validInput({ slug: 'no-gallery-type', status: 'published' }))
+      await productStore.addMedia(p.id, { type: 'image', r2Key: 'process-1.jpg', kind: 'process', sort: 0 })
+
+      const res = await app.request('/api/products')
+      const body = await json<{ products: { coverType: string | null }[] }>(res)
+      expect(body.products[0].coverType).toBeNull()
+    })
+
     it('counts all media kinds in mediaCount', async () => {
       const p = await productStore.create(validInput({ slug: 'counted', status: 'published' }))
       await productStore.addMedia(p.id, { type: 'image', r2Key: 'g.jpg', kind: 'gallery', sort: 0 })

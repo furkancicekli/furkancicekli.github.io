@@ -120,6 +120,35 @@ describe('product-meta route', () => {
     expect(text).toContain('<meta property="og:image" content="https://furkancicekli.com/og-default.jpg" />')
   })
 
+  it('picks the first IMAGE-kind gallery media for og:image when the gallery starts with a video', async () => {
+    const product = await productStore.create(validInput())
+    await productStore.addMedia(product.id, { type: 'video', r2Key: 'products/kuka-tesbih/cover.mp4', kind: 'gallery', sort: 0 })
+    await productStore.addMedia(product.id, { type: 'image', r2Key: 'products/kuka-tesbih/second.jpg', kind: 'gallery', sort: 1 })
+
+    const res = await app.request('/products/kuka-tesbih', {}, { ASSETS: fakeAssets(HEAD_HTML) })
+    const text = await res.text()
+
+    expect(text).toContain(
+      '<meta property="og:image" content="https://furkancicekli.com/api/media/products/kuka-tesbih/second.jpg" />',
+    )
+    expect(text).toContain(
+      '<meta property="twitter:image" content="https://furkancicekli.com/api/media/products/kuka-tesbih/second.jpg" />',
+    )
+    expect(text).not.toContain('cover.mp4')
+  })
+
+  it('falls back to default og image when every gallery media is a video', async () => {
+    const product = await productStore.create(validInput())
+    await productStore.addMedia(product.id, { type: 'video', r2Key: 'products/kuka-tesbih/cover.mp4', kind: 'gallery', sort: 0 })
+
+    const res = await app.request('/products/kuka-tesbih', {}, { ASSETS: fakeAssets(HEAD_HTML) })
+    const text = await res.text()
+
+    expect(text).toContain('<meta property="og:image" content="https://furkancicekli.com/og-default.jpg" />')
+    expect(text).toContain('<meta property="twitter:image" content="https://furkancicekli.com/og-default.jpg" />')
+    expect(text).not.toContain('cover.mp4')
+  })
+
   it('truncates a long description to about 200 chars with ellipsis', async () => {
     const longDescription = 'kelime '.repeat(60).trim()
     await productStore.create(validInput({ translations: { tr: { name: 'Uzun Ürün', description: longDescription, story: null } } }))

@@ -27,11 +27,16 @@ export function escapeHtmlAttr(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
-function firstGalleryCover(media: ProductMediaItem[]): string | null {
-  const galleryMedia = media
-    .filter((m) => m.kind === 'gallery')
+/** Picks the r2Key of the first gallery-kind media that is an IMAGE (skips
+ * videos entirely) so og:image/twitter:image never point at a video URL —
+ * social crawlers render broken previews for those. Falls back to null when
+ * the gallery has no image media, letting the caller use the default og
+ * image. */
+function firstGalleryImageCover(media: ProductMediaItem[]): string | null {
+  const galleryImages = media
+    .filter((m) => m.kind === 'gallery' && m.type === 'image')
     .sort((a, b) => a.sort - b.sort || a.id - b.id)
-  return galleryMedia[0]?.r2Key ?? null
+  return galleryImages[0]?.r2Key ?? null
 }
 
 function truncateDescription(text: string): string {
@@ -80,7 +85,7 @@ productMetaRoutes.get('/products/:slug', async (c) => {
   const rawDescription =
     product.translations.tr?.description || product.translations.en?.description || DEFAULT_DESCRIPTION
   const description = truncateDescription(rawDescription)
-  const cover = firstGalleryCover(product.media)
+  const cover = firstGalleryImageCover(product.media)
   const coverUrl = cover ? `${SITE_ORIGIN}/api/media/${cover}` : DEFAULT_OG_IMAGE
   const url = `${SITE_ORIGIN}/products/${slug}`
   const pageTitle = `${name} | Furkan Çiçekli | Tesbih Ustası`

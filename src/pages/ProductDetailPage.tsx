@@ -100,6 +100,10 @@ export function ProductDetailPage() {
     () => product?.media.filter((m) => m.kind === 'gallery') ?? [],
     [product],
   )
+  const firstGalleryImage = useMemo(
+    () => galleryMedia.find((m) => m.type === 'image') ?? null,
+    [galleryMedia],
+  )
   const processMedia = useMemo(
     () => product?.media.filter((m) => m.kind === 'process' || m.kind === 'raw_material') ?? [],
     [product],
@@ -162,7 +166,7 @@ export function ProductDetailPage() {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.name ?? product.slug,
-        image: galleryMedia.map((m) => `${siteConfig.url}${mediaUrl(m.r2Key)}`),
+        image: galleryMedia.filter((m) => m.type === 'image').map((m) => `${siteConfig.url}${mediaUrl(m.r2Key)}`),
         description: product.description ?? undefined,
         material: product.material ?? undefined,
         brand: { '@type': 'Person', name: siteConfig.name },
@@ -174,7 +178,7 @@ export function ProductDetailPage() {
       <SEO
         title={product?.name ? `${product.name} | ${t('meta.title')}` : t('meta.title')}
         description={product?.description ? product.description.slice(0, 150) : undefined}
-        image={galleryMedia[0] ? mediaUrl(galleryMedia[0].r2Key) : undefined}
+        image={firstGalleryImage ? mediaUrl(firstGalleryImage.r2Key) : undefined}
         structuredDataExtra={structuredData}
       />
 
@@ -227,11 +231,23 @@ export function ProductDetailPage() {
                         setLightboxIndex(activeIndex)
                       }}
                     >
-                      <img
-                        src={mediaUrl(activeMedia.r2Key)}
-                        alt={product.name ?? ''}
-                        className="h-full w-full object-cover"
-                      />
+                      {activeMedia.type === 'video' ? (
+                        <video
+                          src={mediaUrl(activeMedia.r2Key)}
+                          muted
+                          autoPlay
+                          loop
+                          playsInline
+                          preload="metadata"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={mediaUrl(activeMedia.r2Key)}
+                          alt={product.name ?? ''}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
                     </button>
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
