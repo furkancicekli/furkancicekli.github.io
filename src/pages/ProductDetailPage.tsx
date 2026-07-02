@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -52,6 +52,9 @@ export function ProductDetailPage() {
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
+  // Mobil swipe: dokunuş başlangıcı + swipe olduysa tıklamayı (lightbox) bastır
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const swipedRef = useRef(false)
   const [lightboxItems, setLightboxItems] = useState<LightboxItem[] | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
@@ -225,10 +228,35 @@ export function ProductDetailPage() {
                   {activeMedia ? (
                     <button
                       type="button"
-                      className="block h-full w-full cursor-zoom-in"
+                      className="block h-full w-full cursor-zoom-in touch-pan-y"
                       onClick={() => {
+                        if (swipedRef.current) {
+                          // Sürükleme sonrası gelen click görseli açmasın
+                          swipedRef.current = false
+                          return
+                        }
                         setLightboxItems(galleryLightboxItems)
                         setLightboxIndex(activeIndex)
+                      }}
+                      onTouchStart={(e) => {
+                        const t = e.touches[0]
+                        touchStartRef.current = { x: t.clientX, y: t.clientY }
+                        swipedRef.current = false
+                      }}
+                      onTouchEnd={(e) => {
+                        const start = touchStartRef.current
+                        touchStartRef.current = null
+                        if (!start || galleryMedia.length < 2) return
+                        const t = e.changedTouches[0]
+                        const dx = t.clientX - start.x
+                        const dy = t.clientY - start.y
+                        // Yatay hareket baskın ve eşik üstündeyse görsel değiştir;
+                        // dikey kaydırma (sayfa scroll'u) bozulmaz (touch-pan-y).
+                        if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+                        swipedRef.current = true
+                        setActiveIndex((i) =>
+                          dx < 0 ? Math.min(i + 1, galleryMedia.length - 1) : Math.max(i - 1, 0),
+                        )
                       }}
                     >
                       {activeMedia.type === 'video' ? (
