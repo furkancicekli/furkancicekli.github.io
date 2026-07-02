@@ -61,7 +61,12 @@ mediaRoutes.post('/products/:id/media', async (c) => {
   const key = `products/${id}/${crypto.randomUUID()}.${mapped.ext}`
   await c.env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: file.type } })
 
-  const mediaItem = await store.addMedia(id, { type: mapped.type, r2Key: key, kind, sort: 0 })
+  // Append-order sort: new uploads go to the end of their own kind's ordering,
+  // independent of other kinds (e.g. gallery and process each have their own sequence).
+  const sameKindSorts = product.media.filter((m) => m.kind === kind).map((m) => m.sort)
+  const sort = sameKindSorts.length > 0 ? Math.max(...sameKindSorts) + 1 : 0
+
+  const mediaItem = await store.addMedia(id, { type: mapped.type, r2Key: key, kind, sort })
   return c.json(mediaItem, 201)
 })
 

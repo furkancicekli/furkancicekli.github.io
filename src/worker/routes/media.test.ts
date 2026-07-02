@@ -153,6 +153,62 @@ describe('media routes (admin)', () => {
     expect(await res.json()).toEqual({ error: 'invalid_request' })
   })
 
+  it('assigns append-order sort per kind: first upload of a kind is 0, second is 1', async () => {
+    const product = await createProduct()
+    const file1 = new File([new Uint8Array([1, 2, 3])], 'a.jpg', { type: 'image/jpeg' })
+    const file2 = new File([new Uint8Array([4, 5, 6])], 'b.jpg', { type: 'image/jpeg' })
+
+    const res1 = await req(`/api/admin/products/${product.id}/media`, {
+      method: 'POST',
+      headers: { cookie },
+      body: uploadForm(file1, 'gallery'),
+    })
+    const body1 = await json<{ sort: number }>(res1)
+    expect(body1.sort).toBe(0)
+
+    const res2 = await req(`/api/admin/products/${product.id}/media`, {
+      method: 'POST',
+      headers: { cookie },
+      body: uploadForm(file2, 'gallery'),
+    })
+    const body2 = await json<{ sort: number }>(res2)
+    expect(body2.sort).toBe(1)
+  })
+
+  it('tracks append-order sort independently per kind', async () => {
+    const product = await createProduct()
+    const galleryFile1 = new File([new Uint8Array([1])], 'a.jpg', { type: 'image/jpeg' })
+    const galleryFile2 = new File([new Uint8Array([2])], 'b.jpg', { type: 'image/jpeg' })
+    const processFile1 = new File([new Uint8Array([3])], 'c.jpg', { type: 'image/jpeg' })
+
+    const g1 = await json<{ sort: number }>(
+      await req(`/api/admin/products/${product.id}/media`, {
+        method: 'POST',
+        headers: { cookie },
+        body: uploadForm(galleryFile1, 'gallery'),
+      }),
+    )
+    expect(g1.sort).toBe(0)
+
+    const p1 = await json<{ sort: number }>(
+      await req(`/api/admin/products/${product.id}/media`, {
+        method: 'POST',
+        headers: { cookie },
+        body: uploadForm(processFile1, 'process'),
+      }),
+    )
+    expect(p1.sort).toBe(0)
+
+    const g2 = await json<{ sort: number }>(
+      await req(`/api/admin/products/${product.id}/media`, {
+        method: 'POST',
+        headers: { cookie },
+        body: uploadForm(galleryFile2, 'gallery'),
+      }),
+    )
+    expect(g2.sort).toBe(1)
+  })
+
   it('accepts video/mp4 and maps type to video with .mp4 extension', async () => {
     const product = await createProduct()
     const file = new File([new Uint8Array([1, 2, 3])], 'a.mp4', { type: 'video/mp4' })
