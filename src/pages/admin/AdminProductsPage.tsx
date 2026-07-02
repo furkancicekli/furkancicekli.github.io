@@ -16,6 +16,11 @@ const STATUS_CLASS: Record<ProductStatus, string> = {
   sold: 'border border-border text-muted-foreground',
 }
 
+function formatGrams(grams: number | null): string {
+  if (grams === null || grams === undefined) return '—'
+  return `${grams.toLocaleString('tr-TR')} g`
+}
+
 function StatusBadge({ status }: { status: ProductStatus }) {
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_CLASS[status]}`}>
@@ -121,7 +126,7 @@ export function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={p.status} />
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.weightGrams !== null ? `${p.weightGrams} g` : '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatGrams(p.weightGrams)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{p.mediaCount}</td>
                 </tr>
               ))}

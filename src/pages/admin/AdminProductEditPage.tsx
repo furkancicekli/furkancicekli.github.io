@@ -1,8 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createProduct, deleteMedia, deleteProduct, getProduct, updateProduct, uploadProductMedia } from './api'
-import type { Lang, ProductMediaItem, ProductTranslation } from './api'
+import { Copy } from 'lucide-react'
+import {
+  deleteMedia,
+  deleteProduct,
+  getProduct,
+  listCertificates,
+  publishProduct,
+  unpublishProduct,
+  updateProduct,
+  uploadProductMedia,
+} from './api'
+import type { Lang, ProductDetail, ProductMediaItem, ProductStatus, ProductTranslation } from './api'
+import { MaterialSelect } from './MaterialSelect'
+import { formatSerial } from './serial-format'
 
 const ERROR_MESSAGES: Record<string, string> = {
   tr_name_required: 'Türkçe ürün adı zorunlu.',
@@ -14,16 +26,16 @@ const ERROR_MESSAGES: Record<string, string> = {
   unknown: 'Bir hata oluştu. Tekrar deneyin.',
 }
 
-const MEDIA_KIND_OPTIONS: { value: ProductMediaItem['kind']; label: string }[] = [
-  { value: 'gallery', label: 'Galeri' },
-  { value: 'raw_material', label: 'Hammadde' },
-  { value: 'process', label: 'Süreç' },
-]
+const STATUS_LABEL: Record<ProductStatus, string> = {
+  draft: 'Taslak',
+  published: 'Yayında',
+  sold: 'Satıldı',
+}
 
-const MEDIA_KIND_LABEL: Record<ProductMediaItem['kind'], string> = {
-  gallery: 'Galeri',
-  raw_material: 'Hammadde',
-  process: 'Süreç',
+const STATUS_CLASS: Record<ProductStatus, string> = {
+  draft: 'border border-border text-muted-foreground',
+  published: 'bg-primary text-primary-foreground',
+  sold: 'border border-border text-muted-foreground',
 }
 
 const LANGS: { value: Lang; label: string }[] = [
@@ -38,30 +50,139 @@ function emptyTranslations(): Record<Lang, ProductTranslation> {
   return { tr: { ...EMPTY_TRANSLATION }, en: { ...EMPTY_TRANSLATION }, ar: { ...EMPTY_TRANSLATION } }
 }
 
+function verifyUrl(qrToken: string): string {
+  return `${window.location.origin}/verify/${qrToken}`
+}
+
 const inputClass =
   'w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
 
+interface MediaSectionProps {
+  productId: number
+  kind: 'gallery' | 'process'
+  title: string
+  media: ProductMediaItem[]
+  onChanged: () => void
+}
+
+/** Fotoğraf/video yükleme + grid bölümü — "Ürün Fotoğrafları" (gallery) ve
+ * "Yapım Aşamaları" (process) bölümleri bu bileşeni sabit bir kind ile kullanır.
+ * `media` filtrelemesi çağıran tarafta yapılır (process bölümü ayrıca legacy
+ * raw_material kayıtlarını da içerir). */
+function MediaSection({ productId, kind, title, media, onChanged }: MediaSectionProps) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleUpload(e: FormEvent) {
+    e.preventDefault()
+    const file = fileInputRef.current?.files?.[0]
+    if (!file) return
+    setError(null)
+    setBusy(true)
+    const result = await uploadProductMedia(productId, file, kind)
+    setBusy(false)
+    if (!result.ok) {
+      setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
+      return
+    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    onChanged()
+  }
+
+  async function handleDelete(mediaId: number) {
+    if (!window.confirm('Bu medya silinecek. Emin misin?')) return
+    setError(null)
+    setBusy(true)
+    const result = await deleteMedia(mediaId)
+    setBusy(false)
+    if (!result.ok) {
+      setError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
+      return
+    }
+    onChanged()
+  }
+
+  return (
+    <section className="max-w-2xl space-y-4 rounded-lg border border-border bg-card p-4">
+      <h2 className="text-sm font-medium">{title}</h2>
+
+      <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-3">
+        <label className="block space-y-1">
+          <span className="text-sm text-muted-foreground">Dosya</span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,video/mp4"
+            className="block text-sm"
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        >
+          {busy ? 'Yükleniyor…' : 'Yükle'}
+        </button>
+      </form>
+
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      {media.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Henüz medya yok.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          {media.map((m) => (
+            <div key={m.id} className="space-y-2 rounded-md border border-border p-2">
+              {m.type === 'image' ? (
+                <img
+                  src={`/api/media/${m.r2Key}`}
+                  loading="lazy"
+                  alt=""
+                  className="aspect-square w-full rounded-sm object-cover"
+                />
+              ) : (
+                <video src={`/api/media/${m.r2Key}`} muted className="aspect-square w-full rounded-sm object-cover" />
+              )}
+              <button
+                type="button"
+                onClick={() => handleDelete(m.id)}
+                disabled={busy}
+                className="w-full rounded-md px-2 py-1 text-xs font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              >
+                Sil
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 /**
- * Ürün oluşturma/düzenleme formu. :id yoksa oluşturma modu, varsa düzenleme.
- * Medya ve süreç adımları bölümleri yalnızca düzenleme modunda render edilir
- * (yeni ürün henüz kaydedilmeden medya/adım eklenemez).
+ * Ürün düzenleme sayfası (yalnızca mevcut ürünler — oluşturma AdminProductWizard'da).
+ * Üstte durum rozeti + yayınla/kaldır aksiyonu, sertifika kutusu, detaylar formu
+ * ve ikiye ayrılmış medya bölümleri (Ürün Fotoğrafları / Yapım Aşamaları) yer alır.
  */
 export function AdminProductEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const isEdit = id !== undefined
-  const productId = isEdit ? Number(id) : null
+  const productId = Number(id)
 
-  const [loading, setLoading] = useState(isEdit)
+  const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [product, setProduct] = useState<ProductDetail | null>(null)
 
-  const [media, setMedia] = useState<ProductMediaItem[]>([])
-  const [mediaKind, setMediaKind] = useState<ProductMediaItem['kind']>('gallery')
-  const [mediaBusy, setMediaBusy] = useState(false)
-  const [mediaError, setMediaError] = useState<string | null>(null)
-  const mediaFileInputRef = useRef<HTMLInputElement>(null)
+  const [qrToken, setQrToken] = useState<string | null>(null)
+  const [certLoading, setCertLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
 
-  const [material, setMaterial] = useState('')
+  const [material, setMaterial] = useState<string | null>(null)
   const [size, setSize] = useState('')
   const [weightGrams, setWeightGrams] = useState('')
   const [translations, setTranslations] = useState<Record<Lang, ProductTranslation>>(emptyTranslations())
@@ -70,8 +191,24 @@ export function AdminProductEditPage() {
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const [publishBusy, setPublishBusy] = useState(false)
+  const [publishMessage, setPublishMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
+
+  function applyProduct(p: ProductDetail) {
+    setProduct(p)
+    setMaterial(p.material)
+    setSize(p.size ?? '')
+    setWeightGrams(p.weightGrams !== null ? String(p.weightGrams) : '')
+    const next = emptyTranslations()
+    for (const lang of ['tr', 'en', 'ar'] as Lang[]) {
+      const t = p.translations[lang]
+      if (t) next[lang] = t
+    }
+    setTranslations(next)
+  }
+
   useEffect(() => {
-    if (!isEdit || productId === null) return
+    if (Number.isNaN(productId)) return
     let cancelled = false
     getProduct(productId).then((result) => {
       if (cancelled) return
@@ -80,36 +217,43 @@ export function AdminProductEditPage() {
         setLoading(false)
         return
       }
-      const p = result.data
-      setMaterial(p.material ?? '')
-      setSize(p.size ?? '')
-      setWeightGrams(p.weightGrams !== null ? String(p.weightGrams) : '')
-      const next = emptyTranslations()
-      for (const lang of ['tr', 'en', 'ar'] as Lang[]) {
-        const t = p.translations[lang]
-        if (t) next[lang] = t
-      }
-      setTranslations(next)
-      setMedia(p.media)
+      applyProduct(result.data)
       setLoading(false)
     })
     return () => {
       cancelled = true
     }
-  }, [isEdit, productId])
+  }, [productId])
+
+  // POST /api/admin/products yalnızca ürün oluşturulduğunda sertifika döner;
+  // düzenleme sayfası açılışta qrToken'ı listeden productId eşleşmesiyle bulur.
+  // Otomatik sertifika üretimi öncesi oluşturulmuş legacy ürünlerde eşleşme
+  // bulunmayabilir — bu durumda uyarı gösterilir.
+  useEffect(() => {
+    if (Number.isNaN(productId)) return
+    let cancelled = false
+    listCertificates().then((result) => {
+      if (cancelled) return
+      if (result.ok) {
+        const match = result.data.find((c) => c.productId === productId)
+        setQrToken(match ? match.qrToken : null)
+      }
+      setCertLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [productId])
+
+  async function refreshProduct() {
+    const result = await getProduct(productId)
+    if (result.ok) {
+      applyProduct(result.data)
+    }
+  }
 
   function updateTranslation(lang: Lang, field: keyof ProductTranslation, value: string) {
     setTranslations((prev) => ({ ...prev, [lang]: { ...prev[lang], [field]: value === '' ? null : value } }))
-  }
-
-  // Medya mutasyonlarından sonra sadece medya listesini tazeler — form
-  // alanlarındaki kaydedilmemiş değişiklikleri ezmez.
-  async function refreshMedia() {
-    if (productId === null) return
-    const result = await getProduct(productId)
-    if (result.ok) {
-      setMedia(result.data.media)
-    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -127,14 +271,14 @@ export function AdminProductEditPage() {
     }
 
     const input = {
-      material: material.trim() === '' ? null : material.trim(),
+      material,
       size: size.trim() === '' ? null : size.trim(),
       weightGrams: parsedWeight,
       translations,
     }
 
     setBusy(true)
-    const result = isEdit && productId !== null ? await updateProduct(productId, input) : await createProduct(input)
+    const result = await updateProduct(productId, input)
     setBusy(false)
 
     if (!result.ok) {
@@ -142,16 +286,12 @@ export function AdminProductEditPage() {
       return
     }
 
-    if (isEdit) {
-      setMessage({ kind: 'ok', text: 'Kaydedildi.' })
-    } else {
-      navigate(`/admin/products/${result.data.id}`)
-    }
+    applyProduct(result.data)
+    setMessage({ kind: 'ok', text: 'Kaydedildi.' })
   }
 
   async function handleDelete() {
-    if (productId === null) return
-    if (!window.confirm('Bu ürün ve tüm medyası silinecek. Emin misin?')) return
+    if (!window.confirm('Bu ürün, medyası ve sertifikası silinecek. Emin misin?')) return
     setBusy(true)
     const result = await deleteProduct(productId)
     setBusy(false)
@@ -162,41 +302,39 @@ export function AdminProductEditPage() {
     }
   }
 
-  async function handleUploadMedia(e: FormEvent) {
-    e.preventDefault()
-    if (productId === null) return
-    const file = mediaFileInputRef.current?.files?.[0]
-    if (!file) return
-    setMediaError(null)
-    setMediaBusy(true)
-    const result = await uploadProductMedia(productId, file, mediaKind)
-    setMediaBusy(false)
+  async function handleTogglePublish() {
+    if (!product) return
+    setPublishMessage(null)
+    setPublishBusy(true)
+    const result = product.status === 'published' ? await unpublishProduct(productId) : await publishProduct(productId)
+    setPublishBusy(false)
     if (!result.ok) {
-      setMediaError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
+      setPublishMessage({ kind: 'error', text: ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown })
       return
     }
-    if (mediaFileInputRef.current) mediaFileInputRef.current.value = ''
-    await refreshMedia()
+    applyProduct(result.data)
+    setPublishMessage({
+      kind: 'ok',
+      text: result.data.status === 'published' ? 'Ürün yayınlandı.' : 'Ürün yayından kaldırıldı.',
+    })
   }
 
-  async function handleDeleteMedia(mediaId: number) {
-    if (!window.confirm('Bu medya silinecek. Emin misin?')) return
-    setMediaError(null)
-    setMediaBusy(true)
-    const result = await deleteMedia(mediaId)
-    setMediaBusy(false)
-    if (!result.ok) {
-      setMediaError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
-      return
+  async function handleCopySerial() {
+    if (!product?.serialNo) return
+    try {
+      await navigator.clipboard.writeText(product.serialNo)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // pano erişimi reddedildi — sessizce yok say, kullanıcı manuel seçip kopyalayabilir
     }
-    await refreshMedia()
   }
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Yükleniyor…</p>
   }
 
-  if (loadError) {
+  if (loadError || !product) {
     return (
       <p role="alert" className="text-sm text-destructive">
         Ürün yüklenemedi. Tekrar deneyin.
@@ -204,44 +342,86 @@ export function AdminProductEditPage() {
     )
   }
 
+  const galleryMedia = product.media.filter((m) => m.kind === 'gallery')
+  const processMedia = product.media.filter((m) => m.kind === 'process' || m.kind === 'raw_material')
+
   return (
     <div className="space-y-10">
-      <header>
-        <h1 className="font-serif text-2xl font-bold">{isEdit ? 'Ürünü düzenle' : 'Yeni ürün'}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {isEdit ? 'Ürün bilgilerini ve çevirilerini güncelle.' : 'Yeni bir ürün oluştur.'}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-serif text-2xl font-bold">
+              {translations.tr.name ?? <span className="italic text-muted-foreground">{product.slug}</span>}
+            </h1>
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_CLASS[product.status]}`}>
+              {STATUS_LABEL[product.status]}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">Ürün bilgilerini ve çevirilerini güncelle.</p>
+        </div>
+
+        {product.status !== 'sold' && (
+          <button
+            type="button"
+            onClick={handleTogglePublish}
+            disabled={publishBusy}
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          >
+            {publishBusy ? 'İşleniyor…' : product.status === 'published' ? 'Yayından kaldır' : 'Yayınla'}
+          </button>
+        )}
       </header>
+
+      {publishMessage && (
+        <p
+          role="status"
+          className={`text-sm ${publishMessage.kind === 'ok' ? 'text-green-600' : 'text-destructive'}`}
+        >
+          {publishMessage.text}
+        </p>
+      )}
+
+      <section className="max-w-2xl space-y-3 rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-medium">Sertifika</h2>
+
+        {product.serialNo ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="font-mono text-lg font-semibold tracking-wider">{formatSerial(product.serialNo)}</p>
+            <button
+              type="button"
+              onClick={handleCopySerial}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Copy aria-hidden="true" className="h-3.5 w-3.5" />
+              {copied ? 'Kopyalandı' : 'Kopyala'}
+            </button>
+            {!certLoading && qrToken && (
+              <a
+                href={verifyUrl(qrToken)}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md border border-border px-3 py-1.5 text-sm font-medium outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Doğrulama sayfası
+              </a>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Bu üründe seri numarası yok.</p>
+        )}
+
+        {/* Otomatik sertifika üretiminden önce oluşturulmuş legacy ürünlerde
+            sertifika kaydı bulunmayabilir. */}
+        {!certLoading && !qrToken && (
+          <p role="alert" className="text-sm text-destructive">
+            Sertifika bulunamadı. (Otomatik sertifika üretiminden önce oluşturulmuş ürünlerde bu beklenen bir durumdur.)
+          </p>
+        )}
+      </section>
 
       <form onSubmit={handleSubmit} className="space-y-10">
         <section className="max-w-xl space-y-4 rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-medium">Detaylar</h2>
-
-          <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Malzeme</span>
-            <input type="text" value={material} onChange={(e) => setMaterial(e.target.value)} className={inputClass} />
-          </label>
-
-          <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Boyut</span>
-            <input type="text" value={size} onChange={(e) => setSize(e.target.value)} className={inputClass} />
-          </label>
-
-          <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Gram</span>
-            <input
-              type="number"
-              min={0}
-              step={0.1}
-              value={weightGrams}
-              onChange={(e) => setWeightGrams(e.target.value)}
-              className={inputClass}
-            />
-          </label>
-        </section>
-
-        <section className="max-w-xl space-y-4 rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-medium">Çeviriler</h2>
 
           <div role="tablist" aria-label="Dil seçimi" className="flex gap-2">
             {LANGS.map((l) => (
@@ -297,6 +477,27 @@ export function AdminProductEditPage() {
               />
             </label>
           </div>
+
+          <MaterialSelect value={material} onChange={setMaterial} />
+
+          <label className="block space-y-1">
+            <span className="text-sm text-muted-foreground">Gram</span>
+            <input
+              type="number"
+              min={0}
+              step={0.1}
+              value={weightGrams}
+              onChange={(e) => setWeightGrams(e.target.value)}
+              className={inputClass}
+            />
+          </label>
+
+          <label className="block space-y-1">
+            <span className="text-sm text-muted-foreground">Boyut</span>
+            <input type="text" value={size} onChange={(e) => setSize(e.target.value)} className={inputClass} />
+          </label>
+
+          <p className="text-xs text-muted-foreground">Slug: {product.slug}</p>
         </section>
 
         {message && (
@@ -314,95 +515,34 @@ export function AdminProductEditPage() {
             {busy ? 'Kaydediliyor…' : 'Kaydet'}
           </button>
 
-          {isEdit && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={busy}
-              className="rounded-md px-4 py-2 text-sm font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            >
-              Ürünü sil
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={busy}
+            className="rounded-md px-4 py-2 text-sm font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          >
+            Ürünü sil
+          </button>
         </div>
       </form>
 
-      {isEdit && (
-        <section className="max-w-2xl space-y-4 rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-medium">Medya</h2>
-
-          <form onSubmit={handleUploadMedia} className="flex flex-wrap items-end gap-3">
-            <label className="block space-y-1">
-              <span className="text-sm text-muted-foreground">Dosya</span>
-              <input
-                ref={mediaFileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,video/mp4"
-                className="block text-sm"
-              />
-            </label>
-
-            <label className="block space-y-1">
-              <span className="text-sm text-muted-foreground">Tür</span>
-              <select
-                value={mediaKind}
-                onChange={(e) => setMediaKind(e.target.value as ProductMediaItem['kind'])}
-                className={inputClass}
-              >
-                {MEDIA_KIND_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              type="submit"
-              disabled={mediaBusy}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            >
-              {mediaBusy ? 'Yükleniyor…' : 'Yükle'}
-            </button>
-          </form>
-
-          {mediaError && (
-            <p role="alert" className="text-sm text-destructive">
-              {mediaError}
-            </p>
-          )}
-
-          {media.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Henüz medya yok.</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              {media.map((m) => (
-                <div key={m.id} className="space-y-2 rounded-md border border-border p-2">
-                  {m.type === 'image' ? (
-                    <img
-                      src={`/api/media/${m.r2Key}`}
-                      loading="lazy"
-                      alt=""
-                      className="aspect-square w-full rounded-sm object-cover"
-                    />
-                  ) : (
-                    <video src={`/api/media/${m.r2Key}`} muted className="aspect-square w-full rounded-sm object-cover" />
-                  )}
-                  <p className="text-xs text-muted-foreground">{MEDIA_KIND_LABEL[m.kind]}</p>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteMedia(m.id)}
-                    disabled={mediaBusy}
-                    className="w-full rounded-md px-2 py-1 text-xs font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                  >
-                    Sil
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
+      <div className="space-y-6">
+        <h2 className="font-serif text-lg font-bold">Medya</h2>
+        <MediaSection
+          productId={productId}
+          kind="gallery"
+          title="Ürün Fotoğrafları"
+          media={galleryMedia}
+          onChanged={refreshProduct}
+        />
+        <MediaSection
+          productId={productId}
+          kind="process"
+          title="Yapım Aşamaları"
+          media={processMedia}
+          onChanged={refreshProduct}
+        />
+      </div>
     </div>
   )
 }
