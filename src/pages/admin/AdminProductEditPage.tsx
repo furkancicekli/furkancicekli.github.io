@@ -85,12 +85,12 @@ export function AdminProductEditPage() {
   const navigate = useNavigate()
   const productId = Number(id)
 
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState(false)
+  const [loading, setLoading] = useState(!Number.isNaN(productId))
+  const [loadError, setLoadError] = useState(Number.isNaN(productId))
   const [product, setProduct] = useState<ProductDetail | null>(null)
 
   const [qrToken, setQrToken] = useState<string | null>(null)
-  const [certLoading, setCertLoading] = useState(true)
+  const [certLoading, setCertLoading] = useState(!Number.isNaN(productId))
   const [copied, setCopied] = useState(false)
 
   const [material, setMaterial] = useState<string | null>(null)
