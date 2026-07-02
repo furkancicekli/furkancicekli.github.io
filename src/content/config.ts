@@ -19,6 +19,7 @@ export const navItems: NavItem[] = [
   { key: 'home', href: '/' },
   { key: 'about', href: '/#about' },
   { key: 'gallery', href: '/gallery' },
+  { key: 'verify', href: '/verify' },
   { key: 'contact', href: '/#contact' },
 ]
 

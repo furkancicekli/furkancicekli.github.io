@@ -392,23 +392,6 @@ export async function listCertificates(): Promise<
   }
 }
 
-export async function createCertificate(
-  productId: number,
-  buyerName?: string,
-): Promise<{ ok: true; data: Certificate } | { ok: false; error: string }> {
-  try {
-    const res = await post('/api/admin/certificates', { productId, buyerName })
-    if (res.ok) {
-      const data = (await res.json()) as Certificate
-      return { ok: true, data }
-    }
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
-    return { ok: false, error: data.error ?? 'unknown' }
-  } catch {
-    return { ok: false, error: 'network' }
-  }
-}
-
 export async function deleteCertificate(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const res = await del(`/api/admin/certificates/${id}`)

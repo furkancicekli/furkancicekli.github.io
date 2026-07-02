@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Logo } from '@/components/ui'
+import { formatSerial } from './admin/serial-format'
 
 interface VerifyCertificate {
   serialNo: string
@@ -91,7 +92,9 @@ export function VerifyPage() {
 
         <p className="font-serif text-xl text-foreground">{productName}</p>
 
-        <p className="font-mono text-lg font-medium tracking-wide text-foreground">{certificate.serialNo}</p>
+        <p className="font-mono text-lg font-medium tracking-wide text-foreground">
+          {formatSerial(certificate.serialNo)}
+        </p>
 
         <dl className="space-y-2 border-t border-border pt-4 text-left text-sm">
           {certificate.product.material && (
