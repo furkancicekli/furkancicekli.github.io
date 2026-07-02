@@ -19,6 +19,7 @@ import { adminFaqsRoutes, publicFaqsRoutes } from './routes/faqs'
 import { adminCertificatesRoutes, publicVerifyRoutes, publicVerifySerialRoutes } from './routes/certificates'
 import { adminMaterialsRoutes } from './routes/materials'
 import { adminGalleryRoutes, publicGalleryRoutes } from './routes/gallery'
+import { publicProductsRoutes } from './routes/public-products'
 import { requireAuth } from './middleware/require-auth'
 
 export type Bindings = {
@@ -73,6 +74,10 @@ app.use('/api/gallery/*', async (c, next) => {
   c.set('galleryStore', d1GalleryStore(c.env.DB))
   await next()
 })
+app.use('/api/products/*', async (c, next) => {
+  c.set('productStore', d1ProductStore(c.env.DB))
+  await next()
+})
 app.use('/api/verify/*', async (c, next) => {
   c.set('certStore', d1CertStore(c.env.DB))
   await next()
@@ -91,6 +96,7 @@ app.route('/api/admin/gallery', adminGalleryRoutes)
 app.route('/api/media', publicMediaRoutes)
 app.route('/api/faqs', publicFaqsRoutes)
 app.route('/api/gallery', publicGalleryRoutes)
+app.route('/api/products', publicProductsRoutes)
 app.route('/api/verify', publicVerifyRoutes)
 app.route('/api/verify-serial', publicVerifySerialRoutes)
 

@@ -69,6 +69,16 @@ export function fakeProductStore(): ProductStore & {
       const p = products.find((x) => x.id === id)
       return p ? toDetail(p) : null
     },
+    async listPublished(): Promise<ProductDetail[]> {
+      return products
+        .filter((p) => p.status === 'published')
+        .sort((a, b) => b.createdAt - a.createdAt || b.id - a.id)
+        .map(toDetail)
+    },
+    async getBySlugPublished(slug: string): Promise<ProductDetail | null> {
+      const p = products.find((x) => x.slug === slug && x.status === 'published')
+      return p ? toDetail(p) : null
+    },
     async findBySlug(slug: string) {
       const p = products.find((x) => x.slug === slug)
       return p ? { id: p.id } : null

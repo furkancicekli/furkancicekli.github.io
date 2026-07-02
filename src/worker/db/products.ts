@@ -71,7 +71,9 @@ export interface ProductUpdateInput {
 
 export interface ProductStore {
   list(): Promise<ProductListItem[]>
+  listPublished(): Promise<ProductDetail[]>
   get(id: number): Promise<ProductDetail | null>
+  getBySlugPublished(slug: string): Promise<ProductDetail | null>
   findBySlug(slug: string): Promise<{ id: number } | null>
   findBySerial(serialNo: string): Promise<{ id: number } | null>
   create(input: ProductInput): Promise<ProductDetail>
@@ -179,6 +181,23 @@ export function d1ProductStore(db: D1Database): ProductStore {
         mediaCount: row.media_count,
         createdAt: row.created_at,
       }))
+    },
+
+    async listPublished() {
+      const { results } = await db
+        .prepare(`SELECT id FROM products WHERE status = 'published' ORDER BY created_at DESC, id DESC`)
+        .all<{ id: number }>()
+      const details = await Promise.all(results.map((row) => this.get(row.id)))
+      return details.filter((d): d is ProductDetail => d !== null)
+    },
+
+    async getBySlugPublished(slug) {
+      const row = await db
+        .prepare(`SELECT id FROM products WHERE slug = ? AND status = 'published'`)
+        .bind(slug)
+        .first<{ id: number }>()
+      if (!row) return null
+      return this.get(row.id)
     },
 
     async get(id) {
