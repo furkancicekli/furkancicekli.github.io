@@ -96,14 +96,17 @@ function CertificateCard({ certificate, onSaveBuyerName }: CertificateCardProps)
           {new Date(certificate.issuedAt * 1000).toLocaleDateString('tr-TR')}
         </p>
 
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <input
-            type="text"
-            value={buyerNameInput}
-            onChange={(e) => setBuyerNameInput(e.target.value)}
-            placeholder="Alıcı adı"
-            className={`${inputClass} max-w-[200px]`}
-          />
+        <div className="flex flex-wrap items-end gap-2 pt-1">
+          <label className="block space-y-1">
+            <span className="text-sm text-muted-foreground">Alıcı (opsiyonel)</span>
+            <input
+              type="text"
+              value={buyerNameInput}
+              onChange={(e) => setBuyerNameInput(e.target.value)}
+              placeholder="Alıcı adı"
+              className={`${inputClass} max-w-[200px]`}
+            />
+          </label>
           <button
             type="button"
             onClick={handleSaveBuyerName}

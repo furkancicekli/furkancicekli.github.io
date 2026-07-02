@@ -89,7 +89,7 @@ export function MaterialSelect({ value, onChange }: MaterialSelectProps) {
   return (
     <div className="space-y-2">
       <label className="block space-y-1">
-        <span className="text-sm text-muted-foreground">Malzeme</span>
+        <span className="text-sm text-muted-foreground">Malzeme (opsiyonel)</span>
         <select value={value ?? ''} onChange={(e) => handleSelectChange(e.target.value)} className={inputClass}>
           <option value="">— Seçiniz —</option>
           {materials.map((m) => (

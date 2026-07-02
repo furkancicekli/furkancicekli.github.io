@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Upload, X } from 'lucide-react'
+import { Star, Upload, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { deleteMedia, getProduct, uploadProductMedia } from './api'
+import { deleteMedia, getProduct, patchMedia, uploadProductMedia } from './api'
 import type { ProductMediaItem } from './api'
 import { useConfirm } from './ConfirmDialog'
 
@@ -30,20 +30,27 @@ interface MediaUploaderProps {
  * seçilir seçilmez otomatik yükleme (ayrı "Yükle" butonu yok), küçük resim
  * ızgarası ve köşeden silme. Wizard adımları ve edit sayfası ortak kullanır.
  */
+/** sort ASC, id ASC ile sırala — sunucu tarafındaki sıralamayla tutarlı (bkz. loadMedia). */
+function sortMedia(items: ProductMediaItem[]): ProductMediaItem[] {
+  return [...items].sort((a, b) => a.sort - b.sort || a.id - b.id)
+}
+
 export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 'Henüz fotoğraf yok.' }: MediaUploaderProps) {
   const [media, setMedia] = useState<ProductMediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<{ done: number; total: number } | null>(null)
   const [errors, setErrors] = useState<string[]>([])
   const [dragOver, setDragOver] = useState(false)
+  const [busy, setBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { confirm, confirmDialog } = useConfirm()
+  const showCover = uploadKind === 'gallery'
 
   useEffect(() => {
     let cancelled = false
     getProduct(productId).then((result) => {
       if (cancelled) return
-      if (result.ok) setMedia(result.data.media.filter((m) => filterKinds.includes(m.kind)))
+      if (result.ok) setMedia(sortMedia(result.data.media.filter((m) => filterKinds.includes(m.kind))))
       setLoading(false)
     })
     return () => {
@@ -55,7 +62,7 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
 
   async function refresh() {
     const result = await getProduct(productId)
-    if (result.ok) setMedia(result.data.media.filter((m) => filterKinds.includes(m.kind)))
+    if (result.ok) setMedia(sortMedia(result.data.media.filter((m) => filterKinds.includes(m.kind))))
   }
 
   async function handleFiles(files: FileList | File[]) {
@@ -92,6 +99,58 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
       return
     }
     setMedia((prev) => prev.filter((m) => m.id !== mediaId))
+  }
+
+  /**
+   * Komşu öğeyle sort takası (AdminGalleryPage.handleMove ile aynı desen: iki
+   * PATCH, busy flag, try/finally refresh). Legacy verilerde tüm sort'lar 0
+   * olabildiği için basit takas komşu sort'lar eşitse hiçbir şey değiştirmez
+   * (id kıyaslaması sırayı zaten koruyor gibi görünür ama görsel sıra değişmez).
+   * Bu yüzden sort'lar eşitse öğeyi komşunun ±1 ötesine taşıyarak gerçek bir
+   * sıra değişikliği garanti ediyoruz.
+   */
+  async function handleMove(index: number, direction: -1 | 1) {
+    const neighborIndex = index + direction
+    if (neighborIndex < 0 || neighborIndex >= media.length) return
+    const current = media[index]
+    const neighbor = media[neighborIndex]
+    setBusy(true)
+    try {
+      let currentSort = neighbor.sort
+      let neighborSort = current.sort
+      if (current.sort === neighbor.sort) {
+        currentSort = direction === 1 ? neighbor.sort + 1 : neighbor.sort - 1
+        neighborSort = neighbor.sort
+      }
+      const [res1, res2] = await Promise.all([
+        patchMedia(current.id, { sort: currentSort }),
+        patchMedia(neighbor.id, { sort: neighborSort }),
+      ])
+      if (!res1.ok || !res2.ok) {
+        setErrors(['Sıralama güncellenemedi. Tekrar deneyin.'])
+      }
+    } finally {
+      setBusy(false)
+      await refresh()
+    }
+  }
+
+  /** Vitrin yap: kapak fotoğrafı = en düşük sıralı galeri fotoğrafı (public API
+   * böyle türetiyor — bkz. public-products cover). Öğeyi en öne almak için
+   * mevcut en düşük sort'un bir eksiğine taşıyoruz. */
+  async function handleMakeCover(mediaId: number) {
+    if (media.length === 0) return
+    const minSort = Math.min(...media.map((m) => m.sort))
+    setBusy(true)
+    try {
+      const result = await patchMedia(mediaId, { sort: minSort - 1 })
+      if (!result.ok) {
+        setErrors(['Vitrin ayarlanamadı. Tekrar deneyin.'])
+      }
+    } finally {
+      setBusy(false)
+      await refresh()
+    }
   }
 
   return (
@@ -150,7 +209,7 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
         <p className="text-sm text-muted-foreground">{emptyText}</p>
       ) : (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-          {media.map((m) => (
+          {media.map((m, index) => (
             <div key={m.id} className="group relative overflow-hidden rounded-md border border-border">
               {m.type === 'image' ? (
                 <img
@@ -162,6 +221,11 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
               ) : (
                 <video src={`/api/media/${m.r2Key}`} muted className="aspect-square w-full object-cover" />
               )}
+              {showCover && index === 0 && (
+                <span className="absolute left-1 top-1 rounded bg-primary px-1.5 text-[10px] font-medium text-primary-foreground shadow-sm">
+                  Vitrin
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => void handleDelete(m.id)}
@@ -170,6 +234,38 @@ export function MediaUploader({ productId, uploadKind, filterKinds, emptyText = 
               >
                 <X aria-hidden="true" className="h-3.5 w-3.5" />
               </button>
+              <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                {showCover && index !== 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void handleMakeCover(m.id)}
+                    disabled={busy}
+                    title="Vitrin yap"
+                    aria-label="Vitrin yap"
+                    className="rounded-full border border-border bg-background/90 p-1 shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
+                  >
+                    <Star aria-hidden="true" className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void handleMove(index, -1)}
+                  disabled={busy || index === 0}
+                  aria-label="Yukarı taşı"
+                  className="rounded-full border border-border bg-background/90 px-1.5 py-0.5 text-xs shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleMove(index, 1)}
+                  disabled={busy || index === media.length - 1}
+                  aria-label="Aşağı taşı"
+                  className="rounded-full border border-border bg-background/90 px-1.5 py-0.5 text-xs shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
+                >
+                  ▼
+                </button>
+              </div>
             </div>
           ))}
         </div>

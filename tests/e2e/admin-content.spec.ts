@@ -122,7 +122,7 @@ test.describe('admin content management flows', () => {
     const nameInput = page.getByLabel('Ad *')
     await nameInput.fill(PRODUCT_NAME)
 
-    const materialSelect = page.getByRole('combobox', { name: 'Malzeme' })
+    const materialSelect = page.getByRole('combobox', { name: 'Malzeme (opsiyonel)' })
     await materialSelect.selectOption('__new__')
 
     const newMaterialInput = page.getByLabel('Yeni malzeme adı')
@@ -136,9 +136,9 @@ test.describe('admin content management flows', () => {
     await expect(materialSelect).toHaveValue(MATERIAL_NAME)
     await expect(nameInput).toHaveValue(PRODUCT_NAME)
 
-    await page.getByLabel('Gram').fill('12.5')
-    await page.getByLabel('Boyut').fill('M')
-    await page.getByLabel('Açıklama').fill('E2E test açıklaması.')
+    await page.getByLabel('Gram (opsiyonel)').fill('12.5')
+    await page.getByLabel('Boyut (opsiyonel)').fill('M')
+    await page.getByLabel('Açıklama (opsiyonel)').fill('E2E test açıklaması.')
 
     await page.getByRole('button', { name: 'Devam' }).click()
 

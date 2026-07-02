@@ -360,7 +360,7 @@ export function AdminProductWizard() {
           <MaterialSelect value={material} onChange={setMaterial} />
 
           <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Gram</span>
+            <span className="text-sm text-muted-foreground">Gram (opsiyonel)</span>
             <input
               type="number"
               min={0}
@@ -372,12 +372,12 @@ export function AdminProductWizard() {
           </label>
 
           <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Boyut</span>
+            <span className="text-sm text-muted-foreground">Boyut (opsiyonel)</span>
             <input type="text" value={size} onChange={(e) => setSize(e.target.value)} className={inputClass} />
           </label>
 
           <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Açıklama</span>
+            <span className="text-sm text-muted-foreground">Açıklama (opsiyonel)</span>
             <textarea
               rows={3}
               value={descriptionTr}

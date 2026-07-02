@@ -145,11 +145,15 @@ function FaqCard({ faq, index, count, busy, onMove, onSave, onDelete }: FaqCardP
             <div key={l.value} className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground">
                 {l.label}
-                {l.value === 'tr' && <span className="ml-1 uppercase">zorunlu</span>}
+                {l.value === 'tr' ? (
+                  <span className="ml-1 uppercase">zorunlu</span>
+                ) : (
+                  <span className="ml-1 text-muted-foreground">(opsiyonel)</span>
+                )}
               </p>
               <label className="block space-y-1">
                 <span className="text-sm text-muted-foreground">
-                  Soru{l.value === 'tr' && ' *'}
+                  Soru{l.value === 'tr' ? ' *' : ' (opsiyonel)'}
                 </span>
                 <input
                   type="text"
@@ -161,7 +165,7 @@ function FaqCard({ faq, index, count, busy, onMove, onSave, onDelete }: FaqCardP
               </label>
               <label className="block space-y-1">
                 <span className="text-sm text-muted-foreground">
-                  Cevap{l.value === 'tr' && ' *'}
+                  Cevap{l.value === 'tr' ? ' *' : ' (opsiyonel)'}
                 </span>
                 <textarea
                   rows={3}

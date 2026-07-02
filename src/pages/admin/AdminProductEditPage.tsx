@@ -348,7 +348,11 @@ export function AdminProductEditPage() {
                 }`}
               >
                 {l.label}
-                {l.value === 'tr' && <span className="ml-1 text-[10px] uppercase">zorunlu</span>}
+                {l.value === 'tr' ? (
+                  <span className="ml-1 text-[10px] uppercase">zorunlu</span>
+                ) : (
+                  <span className="ml-1 text-[10px] text-muted-foreground">(opsiyonel)</span>
+                )}
               </button>
             ))}
           </div>
@@ -356,7 +360,7 @@ export function AdminProductEditPage() {
           <div role="tabpanel" className="space-y-4">
             <label className="block space-y-1">
               <span className="text-sm text-muted-foreground">
-                Ad{activeLang === 'tr' && ' *'}
+                Ad{activeLang === 'tr' ? ' *' : ' (opsiyonel)'}
               </span>
               <input
                 type="text"
@@ -368,7 +372,7 @@ export function AdminProductEditPage() {
             </label>
 
             <label className="block space-y-1">
-              <span className="text-sm text-muted-foreground">Açıklama</span>
+              <span className="text-sm text-muted-foreground">Açıklama (opsiyonel)</span>
               <textarea
                 rows={3}
                 value={translations[activeLang].description ?? ''}
@@ -378,7 +382,7 @@ export function AdminProductEditPage() {
             </label>
 
             <label className="block space-y-1">
-              <span className="text-sm text-muted-foreground">Hikaye</span>
+              <span className="text-sm text-muted-foreground">Hikaye (opsiyonel)</span>
               <textarea
                 rows={4}
                 value={translations[activeLang].story ?? ''}
@@ -391,7 +395,7 @@ export function AdminProductEditPage() {
           <MaterialSelect value={material} onChange={setMaterial} />
 
           <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Gram</span>
+            <span className="text-sm text-muted-foreground">Gram (opsiyonel)</span>
             <input
               type="number"
               min={0}
@@ -403,7 +407,7 @@ export function AdminProductEditPage() {
           </label>
 
           <label className="block space-y-1">
-            <span className="text-sm text-muted-foreground">Boyut</span>
+            <span className="text-sm text-muted-foreground">Boyut (opsiyonel)</span>
             <input type="text" value={size} onChange={(e) => setSize(e.target.value)} className={inputClass} />
           </label>
 
