@@ -74,5 +74,6 @@ Commit: `test(public): e2e for managed public content`
 - i18n'deki artık kullanılmayan about/craftStack/testimonials/stats metin blokları dosyalarda kalabilir (temizlik düşük öncelik).
 - Ürün modal'ında paylaşım linki / ürün sayfası URL'i (deep-link /products/:slug) — sonraki iterasyon.
 
-## Kayıtlı Karar (P45-2 review)
+## Kayıtlı Karar (P45-2 review) — GÜNCELLENDİ (P4.6)
 - Yayındaki ürünün seri numarası public detayda görünür → herkes /verify-serial ile sorgulayıp (varsa) alıcı adını görebilir. Kapsam genişlemesi bilinçli kabul: sitenin amacı orijinallik, alıcı adı OPSİYONEL ve Furkan bilerek girer. Alternatif (2 satırlık değişiklik, istenirse): doğrulama cevabından buyerName çıkarılır ya da public üründen serial gizlenir. Kullanıcıya soruldu — itiraz gelmezse bu hali kalır.
+- GÜNCELLEME (kullanıcı kararı, P4.6): seri no public ürün sayfasından VE public API cevabından tamamen kaldırıldı (sahtecilik riski: numara kopyalanıp taklit ürüne yapıştırılabilir). Numara yalnız fiziksel kartta; buyerName zinciri de böylece fiziksel kart sahipleriyle sınırlandı.
