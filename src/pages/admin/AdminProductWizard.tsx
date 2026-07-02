@@ -117,6 +117,7 @@ function CertificateStep({ productId, certificateId, serialNo, qrToken, onBack }
   const [buyerMessage, setBuyerMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
   const [publishBusy, setPublishBusy] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
+  const [publishOnFinish, setPublishOnFinish] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -145,7 +146,11 @@ function CertificateStep({ productId, certificateId, serialNo, qrToken, onBack }
     setBuyerMessage({ kind: 'ok', text: 'Kaydedildi.' })
   }
 
-  async function handlePublish() {
+  async function handleFinish() {
+    if (!publishOnFinish) {
+      navigate('/admin/products')
+      return
+    }
     setPublishError(null)
     setPublishBusy(true)
     const result = await publishProduct(productId)
@@ -154,10 +159,6 @@ function CertificateStep({ productId, certificateId, serialNo, qrToken, onBack }
       setPublishError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.unknown)
       return
     }
-    navigate('/admin/products')
-  }
-
-  function handleFinishAsDraft() {
     navigate('/admin/products')
   }
 
@@ -222,7 +223,22 @@ function CertificateStep({ productId, certificateId, serialNo, qrToken, onBack }
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
+      <div className="space-y-1 border-t border-border pt-4">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={publishOnFinish}
+            onChange={(e) => setPublishOnFinish(e.target.checked)}
+            className="h-4 w-4 accent-primary"
+          />
+          <span className="text-sm font-medium">Sitede yayınla</span>
+        </label>
+        <p className="text-xs text-muted-foreground">
+          Kapatırsan ürün taslak kalır, dilediğinde ürün sayfasından yayınlarsın.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -232,19 +248,11 @@ function CertificateStep({ productId, certificateId, serialNo, qrToken, onBack }
         </button>
         <button
           type="button"
-          onClick={handlePublish}
+          onClick={handleFinish}
           disabled={publishBusy}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         >
-          {publishBusy ? 'Yayınlanıyor…' : 'Yayınla'}
-        </button>
-        <button
-          type="button"
-          onClick={handleFinishAsDraft}
-          disabled={publishBusy}
-          className="rounded-md px-4 py-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-        >
-          Taslak olarak bitir
+          {publishBusy ? 'Yayınlanıyor…' : 'Bitir'}
         </button>
       </div>
     </section>
