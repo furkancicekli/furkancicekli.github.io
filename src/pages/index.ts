@@ -1,5 +1,7 @@
 export { HomePage } from './HomePage'
 export { GalleryPage } from './GalleryPage'
 export { ProductsPage } from './ProductsPage'
+export { FaqPage } from './FaqPage'
+export { ContactPage } from './ContactPage'
 export { VerifyPage } from './VerifyPage'
 export { VerifyQueryPage } from './VerifyQueryPage'

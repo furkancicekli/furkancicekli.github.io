@@ -1,14 +1,49 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import { projects } from '@/content/projects'
-import { ProjectCard } from '@/components/ui/ProjectCard'
 import { Button } from '@/components/ui/button'
+
+interface GalleryItem {
+  id: number
+  r2Key: string
+  sort: number
+}
+
+function mediaUrl(r2Key: string): string {
+  return `/api/media/${r2Key}`
+}
 
 export function GalleryPreview() {
   const { t } = useTranslation()
-  const featuredProjects = projects.slice(0, 6)
+  const [items, setItems] = useState<GalleryItem[] | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/gallery')
+      .then((res) => {
+        if (!res.ok) throw new Error('failed')
+        return res.json() as Promise<{ items: GalleryItem[] }>
+      })
+      .then((data) => {
+        if (!cancelled) setItems(data.items)
+      })
+      .catch(() => {
+        if (!cancelled) setError(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const loading = items === null && !error
+  const featured = (items ?? []).slice(0, 6)
+
+  if (!loading && !error && featured.length === 0) return null
 
   return (
     <section id="gallery" className="section-padding bg-base-100">
@@ -28,19 +63,39 @@ export function GalleryPreview() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProjects.map((project, index) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-            >
-              <ProjectCard project={project} />
-            </motion.div>
-          ))}
-        </div>
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-xl bg-base-200 animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {!loading && error && (
+          <p className="text-center text-base-content/80">{t('common.error')}</p>
+        )}
+
+        {!loading && !error && featured.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featured.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="aspect-square rounded-xl overflow-hidden bg-base-200"
+              >
+                <img
+                  src={mediaUrl(item.r2Key)}
+                  alt=""
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}

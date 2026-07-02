@@ -9,6 +9,7 @@
     "about": "Biyografi",
     "products": "Ürünler",
     "gallery": "Galeri",
+    "faq": "SSS",
     "verify": "Sertifika Sorgula",
     "contact": "İletişim"
   },
@@ -42,6 +43,7 @@
     "title": "Galeri",
     "subtitle": "El emeği, göz nuru çalışmaları",
     "viewAll": "Tümünü Gör",
+    "empty": "Henüz galeri fotoğrafı yok.",
     "categories": {
       "all": "Tümü",
       "amber": "Kehribar",
@@ -49,6 +51,11 @@
       "oltu": "Oltu Taşı",
       "other": "Diğer"
     }
+  },
+  "faq": {
+    "title": "Sıkça Sorulan Sorular",
+    "subtitle": "Merak ettiklerinize hızlı yanıtlar",
+    "empty": "Henüz soru eklenmedi."
   },
   "products": {
     "title": "Ürünler",
