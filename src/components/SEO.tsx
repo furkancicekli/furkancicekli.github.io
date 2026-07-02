@@ -20,7 +20,7 @@ const OG_LOCALES: Record<string, string> = { tr: 'tr_TR', en: 'en_US', ar: 'ar_S
 export function SEO({
   title,
   description,
-  image = '/images/hero/1.jpeg',
+  image = '/og-default.jpg', // varsayılan paylaşım görseli: logo kartı (kişisel fotoğraf değil)
   url,
   type = 'website',
   noindex = false,
