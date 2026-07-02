@@ -34,6 +34,12 @@ function isValidSerial(input: string): boolean {
   return luhnIsValid(normalized)
 }
 
+/** Yazarken otomatik biçimlendirme: yalnız rakam, en çok 16 hane, 4'erli gruplar tire ile. */
+function formatSerialInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 16)
+  return digits.replace(/(\d{4})(?=\d)/g, '$1-')
+}
+
 /**
  * Genel sertifika sorgulama sayfası: ziyaretçi karttaki 16 haneli seri
  * numarasını girer, geçerliyse ilgili /verify/:token sayfasına yönlendirilir.
@@ -95,9 +101,10 @@ export function VerifyQueryPage() {
               type="text"
               inputMode="numeric"
               autoComplete="off"
+              maxLength={19}
               value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder="0000 0000 0000 0000"
+              onChange={(e) => setValue(formatSerialInput(e.target.value))}
+              placeholder="0000-0000-0000-0000"
               className={`${inputClass} text-center font-mono tracking-wide`}
             />
           </label>

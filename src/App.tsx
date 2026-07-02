@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom'
 import { Layout } from '@/components/layout'
 import { HomePage, GalleryPage, ProductsPage, VerifyPage, VerifyQueryPage } from '@/pages'
 import {
@@ -19,6 +19,16 @@ import {
 } from '@/pages/admin'
 import { LoadingScreen } from '@/components/ui'
 import '@/i18n'
+
+/** Rota değişince sayfa en üstten başlar — SPA'da tarayıcı scroll'u kendisi
+ * sıfırlamaz; alttayken sayfa değişirse yeni sayfa da altta açılırdı. */
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+  return null
+}
 
 // Public sayfalar mevcut site kabuğu (nav + footer) içinde render edilir
 function PublicShell() {
@@ -50,6 +60,7 @@ function App() {
 
       {/* Router mounts immediately underneath — content is ready when overlay fades */}
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route element={<PublicShell />}>
             <Route path="/" element={<HomePage />} />
