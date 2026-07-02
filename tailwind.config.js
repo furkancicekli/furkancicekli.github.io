@@ -5,9 +5,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Arvo + Lato pairing (self-hosted via @fontsource, imported in globals.css).
+        // Display: Bricolage Grotesque (Greed'in ücretsiz akrabası — mürekkep tuzaklı çağdaş grotesk),
+        // gövde: Lato. 'serif' adı tarihsel alias — tüm başlıklar font-serif kullanıyor.
         sans: ['Lato', 'system-ui', 'sans-serif'],
-        serif: ['Arvo', 'Georgia', 'serif'],
+        serif: ['Bricolage Grotesque Variable', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
         arabic: ['Noto Sans Arabic', 'system-ui', 'sans-serif'],
       },

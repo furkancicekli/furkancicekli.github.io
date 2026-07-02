@@ -19,7 +19,7 @@ export function Footer() {
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <Logo className="h-10 w-[21px] text-neutral-content" />
-              <span className="text-2xl font-serif font-bold text-neutral-content">
+              <span className="text-lg font-serif font-bold text-neutral-content">
                 {siteConfig.name}
               </span>
             </Link>

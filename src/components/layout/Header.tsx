@@ -42,7 +42,7 @@ export function Header() {
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
             <Logo className="h-10 w-[21px] md:h-12 md:w-[25px] text-foreground" />
-            <span className="text-xl md:text-2xl font-serif font-bold text-base-content">
+            <span className="text-base md:text-lg font-serif font-bold text-base-content">
               {siteConfig.name}
             </span>
           </Link>
