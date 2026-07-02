@@ -392,17 +392,6 @@ export async function listCertificates(): Promise<
   }
 }
 
-export async function deleteCertificate(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
-  try {
-    const res = await del(`/api/admin/certificates/${id}`)
-    if (res.ok) return { ok: true }
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
-    return { ok: false, error: data.error ?? 'unknown' }
-  } catch {
-    return { ok: false, error: 'network' }
-  }
-}
-
 export async function patchCertificate(
   id: number,
   buyerName: string | null,

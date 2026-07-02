@@ -58,17 +58,6 @@ adminCertificatesRoutes.patch('/:id', async (c) => {
   return c.json({ ok: true })
 })
 
-adminCertificatesRoutes.delete('/:id', async (c) => {
-  const idParam = c.req.param('id')
-  const id = Number(idParam)
-  if (!Number.isInteger(id)) return c.json({ error: 'invalid_request' }, 400)
-
-  const store = c.get('certStore')
-  const deleted = await store.delete(id)
-  if (!deleted) return c.json({ error: 'not_found' }, 404)
-  return c.json({ ok: true })
-})
-
 publicVerifyRoutes.get('/:token', async (c) => {
   const token = c.req.param('token')
   const store = c.get('certStore')

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Copy } from 'lucide-react'
 import QRCode from 'qrcode'
-import { deleteCertificate, listCertificates, patchCertificate } from './api'
-import { useConfirm } from './ConfirmDialog'
+import { listCertificates, patchCertificate } from './api'
 import type { Certificate } from './api'
 import { formatSerial } from './serial-format'
 
@@ -21,15 +20,11 @@ function verifyUrl(qrToken: string): string {
 
 interface CertificateCardProps {
   certificate: Certificate
-  onDelete: (id: number) => Promise<void>
   onSaveBuyerName: (id: number, buyerName: string | null) => Promise<{ ok: true } | { ok: false; error: string }>
 }
 
-function CertificateCard({ certificate, onDelete, onSaveBuyerName }: CertificateCardProps) {
+function CertificateCard({ certificate, onSaveBuyerName }: CertificateCardProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
-  const { confirm, confirmDialog } = useConfirm()
-  const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [buyerNameInput, setBuyerNameInput] = useState(certificate.buyerName ?? '')
   const [saving, setSaving] = useState(false)
@@ -48,20 +43,6 @@ function CertificateCard({ certificate, onDelete, onSaveBuyerName }: Certificate
       cancelled = true
     }
   }, [certificate.qrToken])
-
-  async function handleDelete() {
-    if (!(await confirm({ title: 'Sertifikayı sil', message: 'Bu sertifika silinecek. Emin misin?' }))) return
-    setError(null)
-    setDeleting(true)
-    try {
-      await onDelete(certificate.id)
-    } catch (err) {
-      const errCode = err instanceof Error ? err.message : 'unknown'
-      setError(ERROR_MESSAGES[errCode] ?? ERROR_MESSAGES.unknown)
-    } finally {
-      setDeleting(false)
-    }
-  }
 
   async function handleCopySerial() {
     try {
@@ -88,7 +69,6 @@ function CertificateCard({ certificate, onDelete, onSaveBuyerName }: Certificate
 
   return (
     <li className="flex flex-col gap-4 rounded-md border border-border p-4 sm:flex-row sm:items-center">
-      {confirmDialog}
       <div className="flex shrink-0 items-center justify-center">
         {qrDataUrl ? (
           <img src={qrDataUrl} alt="Doğrulama QR kodu" className="h-24 w-24 rounded-md border border-border" />
@@ -141,12 +121,6 @@ function CertificateCard({ certificate, onDelete, onSaveBuyerName }: Certificate
             {saveMessage.text}
           </p>
         )}
-
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -167,14 +141,6 @@ function CertificateCard({ certificate, onDelete, onSaveBuyerName }: Certificate
             PNG indir
           </a>
         )}
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleting}
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-        >
-          Sil
-        </button>
       </div>
     </li>
   )
@@ -204,14 +170,6 @@ export function AdminCertificatesPage() {
       cancelled = true
     }
   }, [])
-
-  async function handleDeleteCard(id: number) {
-    const result = await deleteCertificate(id)
-    if (!result.ok) {
-      throw new Error(result.error)
-    }
-    setCertificates((prev) => (prev ? prev.filter((c) => c.id !== id) : prev))
-  }
 
   async function handleSaveBuyerName(id: number, buyerName: string | null) {
     const result = await patchCertificate(id, buyerName)
@@ -250,12 +208,7 @@ export function AdminCertificatesPage() {
         {!loadError && certificates !== null && certificates.length > 0 && (
           <ul className="space-y-4">
             {certificates.map((cert) => (
-              <CertificateCard
-                key={cert.id}
-                certificate={cert}
-                onDelete={handleDeleteCard}
-                onSaveBuyerName={handleSaveBuyerName}
-              />
+              <CertificateCard key={cert.id} certificate={cert} onSaveBuyerName={handleSaveBuyerName} />
             ))}
           </ul>
         )}

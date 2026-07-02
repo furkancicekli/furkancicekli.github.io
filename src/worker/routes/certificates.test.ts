@@ -102,17 +102,12 @@ describe('admin certificates routes', () => {
     expect(body.certificates[1].id).toBe(cert1.id)
   })
 
-  it('deletes a certificate; second delete returns 404', async () => {
+  it('has no DELETE route mounted — certificate lifecycle is bound to the product', async () => {
     const product = await productStore.create(soldProductInput())
     const created = await certStore.create(product.id, product.serialNo as string, 'tok-1', null)
 
     const delRes = await req(`/api/admin/certificates/${created.id}`, { method: 'DELETE', headers: { cookie } })
-    expect(delRes.status).toBe(200)
-    expect(await delRes.json()).toEqual({ ok: true })
-
-    const delRes2 = await req(`/api/admin/certificates/${created.id}`, { method: 'DELETE', headers: { cookie } })
-    expect(delRes2.status).toBe(404)
-    expect(await delRes2.json()).toEqual({ error: 'not_found' })
+    expect(delRes.status).toBe(404)
   })
 
   it('updates buyerName on happy path and persists in the store', async () => {
