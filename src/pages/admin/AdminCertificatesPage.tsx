@@ -155,9 +155,23 @@ function CertificateCard({ certificate, onSaveBuyerName }: CertificateCardProps)
  * listeler, alıcı adını düzenlemeye ve doğrulama QR'ını yönetmeye izin verir.
  * QR, /verify/:token genel sayfasına işaret eder (bkz. VerifyPage).
  */
+/** Arama eşleştirmesi: seri no boşluk/tire duyarsız, metinler küçük-harf duyarsız (tr locale). */
+function matchesQuery(cert: Certificate, query: string): boolean {
+  const q = query.trim().toLocaleLowerCase('tr-TR')
+  if (q === '') return true
+  const qDigits = q.replace(/[\s-]/g, '')
+  if (qDigits !== '' && /^\d+$/.test(qDigits) && cert.serialNo.includes(qDigits)) return true
+  const haystack = [cert.productName, cert.productSlug, cert.buyerName]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleLowerCase('tr-TR')
+  return haystack.includes(q)
+}
+
 export function AdminCertificatesPage() {
   const [certificates, setCertificates] = useState<Certificate[] | null>(null)
   const [loadError, setLoadError] = useState(false)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -194,6 +208,17 @@ export function AdminCertificatesPage() {
       <section className="max-w-2xl space-y-4 rounded-lg border border-border bg-card p-4">
         <h2 className="text-sm font-medium">Sertifikalar</h2>
 
+        <label className="block space-y-1">
+          <span className="sr-only">Sertifikalarda ara</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Ara: seri no, ürün veya alıcı adı…"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+
         {loadError && (
           <p role="alert" className="text-sm text-destructive">
             Sertifikalar yüklenemedi. Tekrar deneyin.
@@ -208,13 +233,22 @@ export function AdminCertificatesPage() {
           </p>
         )}
 
-        {!loadError && certificates !== null && certificates.length > 0 && (
-          <ul className="space-y-4">
-            {certificates.map((cert) => (
-              <CertificateCard key={cert.id} certificate={cert} onSaveBuyerName={handleSaveBuyerName} />
-            ))}
-          </ul>
-        )}
+        {!loadError &&
+          certificates !== null &&
+          certificates.length > 0 &&
+          (() => {
+            const filtered = certificates.filter((c) => matchesQuery(c, query))
+            if (filtered.length === 0) {
+              return <p className="text-sm text-muted-foreground">Aramayla eşleşen sertifika yok.</p>
+            }
+            return (
+              <ul className="space-y-4">
+                {filtered.map((cert) => (
+                  <CertificateCard key={cert.id} certificate={cert} onSaveBuyerName={handleSaveBuyerName} />
+                ))}
+              </ul>
+            )
+          })()}
       </section>
     </div>
   )
