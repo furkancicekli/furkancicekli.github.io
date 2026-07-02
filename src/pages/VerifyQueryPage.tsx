@@ -83,7 +83,7 @@ export function VerifyQueryPage() {
   }
 
   return (
-    <main className="flex min-h-[70vh] items-center justify-center bg-background px-4 py-12">
+    <main className="flex min-h-[70vh] items-center justify-center bg-background px-4 pt-28 pb-12">
       <SEO
         title="Sertifika Sorgula | Furkan Çiçekli"
         description="Furkan Çiçekli el yapımı tesbihlerinin orijinallik sertifikasını 16 haneli numarayla sorgula."

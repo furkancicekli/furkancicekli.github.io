@@ -9,7 +9,6 @@ import { Logo } from '@/components/ui/Logo'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { siteConfig } from '@/content/config'
-import { formatSerial } from './admin/serial-format'
 
 interface ProductMedia {
   type: 'image' | 'video'
@@ -25,7 +24,6 @@ interface ProductDetail {
   material: string | null
   size: string | null
   weightGrams: number | null
-  serialNo: string | null
   media: ProductMedia[]
 }
 
@@ -168,7 +166,6 @@ export function ProductDetailPage() {
         description: product.description ?? undefined,
         material: product.material ?? undefined,
         brand: { '@type': 'Person', name: siteConfig.name },
-        sku: product.serialNo ?? undefined,
       }
     : null
 
@@ -324,14 +321,9 @@ export function ProductDetailPage() {
                   </div>
                 )}
 
-                {product.serialNo && (
-                  <p className="mt-6 font-mono text-xs text-muted-foreground">
-                    {t('product.serial')}: {formatSerial(product.serialNo)} ·{' '}
-                    <Link to="/verify" className="underline underline-offset-2 hover:text-foreground">
-                      {t('product.verifyCta')}
-                    </Link>
-                  </p>
-                )}
+                {/* Seri numarası BİLEREK gösterilmiyor: public sayfadaki numara
+                    sahte bir ürüne yapıştırılıp "doğrulanabilir" hale getirilebilir.
+                    Numara yalnızca ürünle gönderilen fiziksel kartta yer alır. */}
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <Button asChild className="w-full sm:w-auto">

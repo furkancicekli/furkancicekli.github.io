@@ -182,8 +182,11 @@ describe('public products routes', () => {
         material: 'Kuka',
         size: '10mm',
         weightGrams: 25,
-        serialNo: 'SN-001',
       })
+      // Güvenlik regresyon guard'ı: seri no public cevapta ASLA yer almaz —
+      // sahte ürüne yapıştırılabilir; yalnızca fiziksel kartta yaşar.
+      expect(body.product).not.toHaveProperty('serialNo')
+      expect(JSON.stringify(body)).not.toContain('SN-001')
       // gallery first (sorted), then process, then raw_material
       expect(body.product.media.map((m) => m.r2Key)).toEqual([
         'gallery-1.jpg',

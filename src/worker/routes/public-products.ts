@@ -88,7 +88,8 @@ publicProductsRoutes.get('/:slug', async (c) => {
       material: product.material,
       size: product.size,
       weightGrams: product.weightGrams,
-      serialNo: product.serialNo,
+      // serialNo bilinçli olarak public cevapta YOK — sahte ürüne yapıştırılabilir;
+      // numara yalnızca fiziksel sertifika kartında yaşar.
       media: sortMedia(product.media).map((m) => ({ type: m.type, r2Key: m.r2Key, kind: m.kind })),
     },
   })
