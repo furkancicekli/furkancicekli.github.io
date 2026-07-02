@@ -8,7 +8,7 @@
 
 ## Global Constraints
 
-- YENİ migration `migrations/0003_gallery.sql` (aşağıda) — 0001/0002 değişmez. Seed INSERT'leri mevcut R2 key'lerini kullanır (`gallery/craft-1.jpg` … `gallery/craft-20.jpg`, Faz 1'de yüklendi).
+- YENİ migration `migrations/0004_gallery.sql` (aşağıda) — 0001-0003 değişmez (0003 = cert serial UNIQUE, P3.5 final-review fix). Seed INSERT'leri mevcut R2 key'lerini kullanır (`gallery/craft-1.jpg` … `gallery/craft-20.jpg`, Faz 1'de yüklendi).
 - Public API'ler açık (auth yok), admin API'ler mevcut requireAuth zincirinde; hata gövdesi `{error:'<kod>'}` kalıbı.
 - Public sayfalarda dil: mevcut i18n dili (i18next `i18n.language` → 'tr'|'en'|'ar') API `lang` parametresine geçilir; çeviri boşsa tr fallback SUNUCUDA yapılır (faqs deseni).
 - Public UI mevcut tasarım dili: token'lar, Arvo/Lato, mevcut lightbox/section desenleri. Yeni npm bağımlılığı YOK.
@@ -16,7 +16,7 @@
 - `/#about`, `/#contact` hash nav'ları kalkar; nav artık gerçek rotalara gider.
 - Testler: worker TDD (fake store), UI build/lint, e2e Task 8'de güncellenir. Her task sonunda unit+build yeşil.
 
-## migrations/0003_gallery.sql
+## migrations/0004_gallery.sql
 
 ```sql
 CREATE TABLE gallery_items (
@@ -38,7 +38,7 @@ INSERT INTO gallery_items (r2_key, sort) VALUES
 
 ### Task 1: Galeri store + admin/public API (TDD)
 `src/worker/db/gallery.ts`: `GalleryStore { list() (sort ASC, id ASC); create(r2Key, sort); updateSort(id, sort); delete(id): Promise<{r2Key} | null> }` + d1 + fake. Route'lar `src/worker/routes/gallery.ts`: PUBLIC `GET /api/gallery` → `{items:[{id, r2Key, sort}]}`; admin `POST /api/admin/gallery` (multipart `file`, media.ts upload kuralları — MIME/15MB; R2 key `gallery/<uuid>.<ext>`; sort default max+1), `PATCH /api/admin/gallery/:id {sort}`, `DELETE /api/admin/gallery/:id` (R2 delete + satır; R2 hatası satır silmeyi engellemez — media deseni). index.ts: combined middleware'e galleryStore; public mount. Migration bu task'ta eklenir + lokal migrate. Testler: list sıralı+seed'siz fake, upload happy/MIME/boyut, sort patch, delete R2 dahil + R2 hata toleransı, public auth'suz erişir, admin auth'suz 401.
-Commit: `feat(gallery): admin-managed gallery with public listing (migration 0003)`
+Commit: `feat(gallery): admin-managed gallery with public listing (migration 0004)`
 
 ### Task 2: Public products API (TDD)
 `src/worker/routes/public-products.ts` (veya products.ts'e public sub-app): PUBLIC `GET /api/products?lang=tr` → yalnız `status='published'`, sort createdAt DESC: `{products:[{slug, name, description, material, size, weightGrams, cover: r2Key|null (ilk gallery-kind medya), mediaCount}]}` — name/description istenen dil, tr fallback (server-side). PUBLIC `GET /api/products/:slug?lang=` → published değilse/yoksa 404: `{product:{slug, name, description, story, material, size, weightGrams, media:[{type, r2Key, kind}] (gallery önce, sonra process), serialNo}}`. Store'a `listPublished()` / `getBySlugPublished()` eklenir (d1+fake). Draft ürün public'ten SIZMAZ (test). Commit: `feat(products): public listing and detail endpoints with language fallback`
