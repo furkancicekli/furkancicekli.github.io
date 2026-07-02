@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "db:migrate:local": "wrangler d1 migrations apply furkancicekli --local",
     "db:migrate": "wrangler d1 migrations apply furkancicekli --remote",
-    "seed:r2": "bash scripts/seed-r2.sh"
+    "seed:r2": "bash scripts/seed-r2.sh",
+    "seed:r2:local": "bash scripts/seed-r2-local.sh"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
